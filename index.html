@@ -63,10 +63,23 @@
             <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無賽程</div>
         </div>
 
-        <footer class="mt-8 px-5 text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">NYCU Chemistry 2026</footer>
-    </div>
+        <footer class="mt-12 px-5 pb-10 text-center">
+            <div class="h-px bg-gray-200 w-full mb-8"></div>
+            
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] mb-6">Sponsored By</p>
+            
+            <div class="flex flex-wrap justify-center items-center gap-6 mb-8">
+                <div class="w-20 h-20 flex items-center justify-center">
+                    <img src="logo1.png" class="max-w-full max-h-full object-contain grayscale" alt="Sponsor 1">
+                </div>
+                <div class="w-20 h-20 flex items-center justify-center">
+                    <img src="logo2.png" class="max-w-full max-h-full object-contain grayscale" alt="Sponsor 2">
+                </div>
+            </div>
 
-    <script>
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">NYCU Chemistry 2026</p>
+        </footer>
+    </div> <script>
         const { createApp } = Vue;
         const SID = '1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m';
 
@@ -78,54 +91,55 @@
                     loading: false,
                     categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打'],
                     gidMap: {
-                        '男籃': '0',
-                        '女籃': '1525132450', 
-                        '男排': '1646878380', 
-                        '女排': '1843573624', 
-                        '羽球團體': '756676645',
-                        '男子單打': '124041338',
-                        '男子雙打': '977181851',
-                        '女子單打': '837944817'
+                        '男籃': '0', '女籃': '1525132450', '男排': '1646878380', '女排': '1843573624', 
+                        '羽球團體': '756676645', '男子單打': '124041338', '男子雙打': '977181851', '女子單打': '837944817'
                     }
                 }
             },
             methods: {
-                async changeTab(cat) {
-                    this.activeTab = cat;
-                    await this.getData();
+                async changeTab(cat) { this.activeTab = cat; await this.getData(); },
+                splitScores(s) {
+                    if (!s) return [];
+                    return s.replace(/"/g, '').split(/[ /\s,]+/).filter(x => x.includes(':'));
                 },
                 getMatchStatus(match) {
-                    if (match.Score && match.Score.trim() !== '' && match.Score.includes(':')) return '已結束';
+                    const scores = this.splitScores(match.Score);
+                    if (scores.length > 0) return '已結束';
                     const now = new Date();
                     const [h, m] = (match.Time || "08:00").split(':').map(n => parseInt(n));
-                    if (isNaN(h)) return '未開賽';
-                    const matchTime = new Date();
-                    matchTime.setHours(h, m, 0);
+                    const matchTime = new Date(); matchTime.setHours(h, m, 0);
                     return now >= matchTime ? '進行中' : '未開賽';
                 },
-                displayScore(s) {
-                    if (!s || !s.includes(':')) return 'VS';
-                    const gs = s.split(/[ /]+/);
-                    
+                isWinner(match, side) {
+                    const gs = this.splitScores(match.Score);
+                    if (gs.length === 0) return false;
+                    let hVal = 0, aVal = 0;
                     if (this.activeTab.includes('籃')) {
-                        let totalH = 0, totalA = 0;
                         gs.forEach(g => {
                             const p = g.split(':').map(n => parseInt(n));
-                            if (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) {
-                                totalH += p[0]; totalA += p[1];
-                            }
+                            if (p.length === 2) { hVal += p[0]; aVal += p[1]; }
                         });
-                        return totalH + ':' + totalA;
-                    } 
-                    
-                    let hWins = 0, aWins = 0;
+                    } else {
+                        gs.forEach(g => {
+                            const p = g.split(':').map(n => parseInt(n));
+                            if (p.length === 2) { if (p[0] > p[1]) hVal++; else if (p[1] > p[0]) aVal++; }
+                        });
+                    }
+                    if (hVal === aVal) return false;
+                    return side === 'home' ? hVal > aVal : aVal > hVal;
+                },
+                displayScore(s) {
+                    const gs = this.splitScores(s);
+                    if (gs.length === 0) return 'VS';
+                    let h = 0, a = 0;
                     gs.forEach(g => {
                         const p = g.split(':').map(n => parseInt(n));
-                        if (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) {
-                            if (p[0] > p[1]) hWins++; else if (p[1] > p[0]) aWins++;
+                        if (p.length === 2) {
+                            if (this.activeTab.includes('籃')) { h += p[0]; a += p[1]; }
+                            else { if (p[0] > p[1]) h++; else if (p[1] > p[0]) a++; }
                         }
                     });
-                    return hWins + ':' + aWins;
+                    return h + ':' + a;
                 },
                 async getData() {
                     this.loading = true;
@@ -136,7 +150,7 @@
                         const text = await res.text();
                         const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
                         this.matches = rows.map((r, i) => {
-                            const c = r.split(',').map(v => v.replace(/^"|"$/g, '').trim());
+                            const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
                             return { id: i, Time: c[0] || '08:00', Home: c[2] || 'TBD', Away: c[3] || 'TBD', Score: c[4] || '' };
                         });
                     } catch (e) { this.matches = []; }
