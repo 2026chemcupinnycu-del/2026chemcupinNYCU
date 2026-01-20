@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 大化盃比分查詢</title>
+    <title>2026 大化盃比分牆</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -20,7 +20,7 @@
             <div class="grid grid-cols-2 gap-2 mb-8">
                 <button v-for="cat in categories" @click="changeTab(cat)"
                     :class="activeTab === cat ? 'bg-[#001f54] text-white shadow-lg scale-95' : 'bg-white text-gray-500 shadow-sm'"
-                    class="py-3.5 rounded-2xl border border-gray-200 text-xs font-black transition-all">
+                    class="py-3.5 rounded-2xl border border-gray-200 text-[11px] font-black transition-all">
                     {{ cat }}
                 </button>
             </div>
@@ -41,12 +41,12 @@
                         </div>
 
                         <div class="flex justify-between items-center text-center">
-                            <div class="flex-1 font-bold text-sm text-gray-800 break-words">{{ match.Home }}</div>
+                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
                             <div class="flex-none px-4 text-center">
                                 <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ calculateScore(match.Score) }}</div>
                                 <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
                             </div>
-                            <div class="flex-1 font-bold text-sm text-gray-800 break-words">{{ match.Away }}</div>
+                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
                         </div>
 
                         <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
@@ -57,24 +57,17 @@
                     </div>
                 </div>
             </div>
-            
-            <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">
-                SYNCING...
-            </div>
-            <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">
-                目前 {{ activeTab }} 暫無賽程
-            </div>
+            <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">SYNCING...</div>
+            <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無賽程</div>
         </div>
 
         <footer class="mt-8 px-5 text-center">
-            <div class="h-px bg-gray-200 w-1/3 mx-auto mb-4"></div>
             <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">NYCU Chemistry 2026</p>
         </footer>
     </div>
 
     <script>
         const { createApp } = Vue;
-        // 修正後的 ID
         const SID = '1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m';
 
         createApp({
@@ -83,7 +76,18 @@
                     matches: [],
                     activeTab: '男籃',
                     loading: false,
-                    categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打']
+                    categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打'],
+                    // 🚨 請把這裡的數字換成妳在 Excel 分頁網址看到的 gid 數字 🚨
+                    gidMap: {
+                        '男籃': '0',
+                        '女籃': '1525132450', // 換成女籃分頁的 gid
+                        '男排': '1646878380', // 換成男排分頁的 gid
+                        '女排': '1843573624',
+                        '羽球團體': '756676645',
+                        '男子單打': '124041338',
+                        '男子雙打': '977181851',
+                        '女子單打': '837944817'
+                    }
                 }
             },
             methods: {
@@ -117,27 +121,20 @@
                 async getData() {
                     this.loading = true;
                     try {
-                        // 使用完整的發布連結格式，強制指定 sheet 名稱
-                        const url = `https://docs.google.com/spreadsheets/d/e/2PACX-${SID}/pub?sheet=${encodeURIComponent(this.activeTab)}&output=csv&t=${Date.now()}`;
+                        const gid = this.gidMap[this.activeTab];
+                        const url = `https://docs.google.com/spreadsheets/d/e/2PACX-${SID}/pub?gid=${gid}&single=true&output=csv&t=${Date.now()}`;
                         const res = await fetch(url);
-                        if (!res.ok) throw new Error();
                         const text = await res.text();
                         const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
                         this.matches = rows.map((r, i) => {
                             const c = r.split(',').map(v => v.replace(/^"|"$/g, '').trim());
                             return { id: i, Time: c[0], Category: c[1], Home: c[2], Away: c[3], Score: c[4] || '' };
                         });
-                    } catch (e) { 
-                        this.matches = [];
-                    } finally {
-                        this.loading = false;
-                    }
+                    } catch (e) { this.matches = []; }
+                    finally { this.loading = false; }
                 }
             },
-            mounted() {
-                this.getData();
-                setInterval(this.getData, 30000); 
-            }
+            mounted() { this.getData(); setInterval(this.getData, 30000); }
         }).mount('#app');
     </script>
 </body>
