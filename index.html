@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 大化盃比分牆</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="max-w-md mx-auto min-h-screen pb-10">
+        <header class="bg-[#001f54] text-white p-8 rounded-b-[2.5rem] shadow-xl mb-8 text-center border-b-4 border-yellow-400">
+            <h1 class="text-3xl font-black mb-1">2026 大化盃</h1>
+            <div class="inline-block bg-yellow-400 text-blue-900 px-3 py-0.5 rounded-full text-xs font-black">in NYCU</div>
+        </header>
+
+        <div class="px-5">
+            <div class="grid grid-cols-2 gap-2 mb-8">
+                <button v-for="cat in categories" @click="filter = (filter === cat ? '' : cat)"
+                    :class="filter === cat ? 'bg-[#001f54] text-white' : 'bg-white text-gray-500'"
+                    class="py-3.5 rounded-2xl border border-gray-200 text-xs font-bold transition-all">
+                    {{ cat }}
+                </button>
+            </div>
+
+            <div v-for="match in filteredMatches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white">
+                <div class="h-1.5 w-full" :class="match.Status === '已結束' ? 'bg-gray-200' : 'bg-red-500'"></div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-5">
+                        <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold">🕒 {{ match.Time }}</span>
+                        <span class="text-xs font-black" :class="match.Status === '已結束' ? 'text-gray-300' : 'text-red-500'">
+                            {{ match.Status === '已結束' ? '已結束' : '● 進行中' }}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-center">
+                        <div class="flex-1 font-bold text-sm text-gray-800">{{ match.Home }}</div>
+                        <div class="flex-none px-4 text-center">
+                            <div class="text-4xl font-black text-gray-900">{{ calculateScore(match.Score) }}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ match.Category }}</div>
+                        </div>
+                        <div class="flex-1 font-bold text-sm text-gray-800">{{ match.Away }}</div>
+                    </div>
+
+                    <div v-if="match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5">
+                        <span v-for="(s, i) in match.Score.split(/[ /]+/)" class="bg-gray-50 text-gray-400 text-[10px] px-2.5 py-1 rounded-lg border">
+                            S{{i+1}}: {{ s }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-6 px-5 text-center">
+            <div class="bg-white p-4 rounded-[2.5rem] shadow-sm">
+                <img src="https://tinyurl.com/dahacup2026-img" class="w-full h-auto rounded-3xl mb-4 shadow-sm">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em]">NYCU Chemistry 2026</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m/pub?gid=0&single=true&output=csv';
+
+        createApp({
+            data() {
+                return { matches: [], filter: '', categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打'] }
+            },
+            computed: { filteredMatches() { return this.filter ? this.matches.filter(m => m.Category.includes(this.filter)) : this.matches; } },
+            methods: {
+                calculateScore(s) {
+                    if (!s || !s.includes(':')) return 'VS';
+                    const gs = s.split(/[ /]+/);
+                    let h = 0, a = 0;
+                    gs.forEach(g => {
+                        const p = g.split(':');
+                        if (p.length === 2) {
+                            const p1 = parseInt(p[0]); const p2 = parseInt(p[1]);
+                            if (p1 > p2) h++; else if (p2 > p1) a++;
+                        }
+                    });
+                    if (gs.length === 1 && parseInt(gs[0].split(':')[0]) > 30) return s;
+                    return h + ':' + a;
+                },
+                async getData() {
+                    try {
+                        const res = await fetch(SHEET_URL + '&t=' + Date.now());
+                        const text = await res.text();
+                        const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
+                        this.matches = rows.map((r, i) => {
+                            const c = r.split(',').map(v => v.replace(/^"|"$/g, '').trim());
+                            return { id: i, Time: c[0] || '--:--', Category: c[1] || '', Home: c[2] || '隊伍A', Away: c[3] || '隊伍B', Score: c[4] || '', Status: c[5] || '進行中' };
+                        });
+                    } catch (e) { console.log("error"); }
+                }
+            },
+            mounted() { this.getData(); setInterval(this.getData, 20000); }
+        }).mount('#app');
+    </script>
+</body>
+</html>
