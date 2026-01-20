@@ -25,10 +25,9 @@
                 </button>
             </div>
 
-            <div v-if="matches.length > 0">
+            <div v-if="!loading && matches.length > 0">
                 <div v-for="match in matches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
                     <div class="h-1.5 w-full" :class="getMatchStatus(match) === '進行中' ? 'bg-red-500' : 'bg-gray-200'"></div>
-                    
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-5">
                             <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
@@ -42,12 +41,12 @@
                         </div>
 
                         <div class="flex justify-between items-center text-center">
-                            <div class="flex-1 font-bold text-sm text-gray-800">{{ match.Home }}</div>
+                            <div class="flex-1 font-bold text-sm text-gray-800 break-words">{{ match.Home }}</div>
                             <div class="flex-none px-4 text-center">
                                 <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ calculateScore(match.Score) }}</div>
                                 <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
                             </div>
-                            <div class="flex-1 font-bold text-sm text-gray-800">{{ match.Away }}</div>
+                            <div class="flex-1 font-bold text-sm text-gray-800 break-words">{{ match.Away }}</div>
                         </div>
 
                         <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
@@ -59,8 +58,11 @@
                 </div>
             </div>
             
-            <div v-else class="text-center py-20 text-gray-400 font-bold">
-                載入中... 請稍候
+            <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">
+                SYNCING...
+            </div>
+            <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">
+                目前 {{ activeTab }} 暫無賽程
             </div>
         </div>
 
@@ -72,26 +74,27 @@
 
     <script>
         const { createApp } = Vue;
-        // 妳的試算表 ID
-        const SPREADSHEET_ID = '1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m';
+        // 修正後的 ID
+        const SID = '1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m';
 
         createApp({
             data() {
                 return {
                     matches: [],
                     activeTab: '男籃',
+                    loading: false,
                     categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打']
                 }
             },
             methods: {
-                changeTab(cat) {
+                async changeTab(cat) {
                     this.activeTab = cat;
-                    this.getData();
+                    await this.getData();
                 },
                 getMatchStatus(match) {
                     if (match.Score && match.Score.trim() !== '') return '已結束';
                     const now = new Date();
-                    const [h, m] = match.Time.split(':').map(n => parseInt(n));
+                    const [h, m] = (match.Time || "08:00").split(':').map(n => parseInt(n));
                     if (isNaN(h)) return '未開賽';
                     const matchTime = new Date();
                     matchTime.setHours(h, m, 0);
@@ -112,22 +115,28 @@
                     return h + ':' + a;
                 },
                 async getData() {
+                    this.loading = true;
                     try {
-                        // 利用 sheet 名稱來動態抓取對應的分頁
-                        const url = `https://docs.google.com/spreadsheets/d/e/2PACX-${SPREADSHEET_ID}/pub?sheet=${encodeURIComponent(this.activeTab)}&output=csv&t=${Date.now()}`;
+                        // 使用完整的發布連結格式，強制指定 sheet 名稱
+                        const url = `https://docs.google.com/spreadsheets/d/e/2PACX-${SID}/pub?sheet=${encodeURIComponent(this.activeTab)}&output=csv&t=${Date.now()}`;
                         const res = await fetch(url);
+                        if (!res.ok) throw new Error();
                         const text = await res.text();
                         const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
                         this.matches = rows.map((r, i) => {
                             const c = r.split(',').map(v => v.replace(/^"|"$/g, '').trim());
-                            return { id: i, Time: c[0] || '08:00', Home: c[2] || '隊伍A', Away: c[3] || '隊伍B', Score: c[4] || '' };
+                            return { id: i, Time: c[0], Category: c[1], Home: c[2], Away: c[3], Score: c[4] || '' };
                         });
-                    } catch (e) { console.log("Fetch Error"); }
+                    } catch (e) { 
+                        this.matches = [];
+                    } finally {
+                        this.loading = false;
+                    }
                 }
             },
             mounted() {
                 this.getData();
-                setInterval(this.getData, 20000); // 每 20 秒自動刷新當前分頁
+                setInterval(this.getData, 30000); 
             }
         }).mount('#app');
     </script>
