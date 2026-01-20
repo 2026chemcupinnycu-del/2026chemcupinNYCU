@@ -18,45 +18,49 @@
 
         <div class="px-5">
             <div class="grid grid-cols-2 gap-2 mb-8">
-                <button v-for="cat in categories" @click="filter = (filter === cat ? '' : cat)"
-                    :class="filter === cat ? 'bg-[#001f54] text-white shadow-lg' : 'bg-white text-gray-500 shadow-sm'"
-                    class="py-3.5 rounded-2xl border border-gray-200 text-xs font-bold transition-all active:scale-95">
+                <button v-for="cat in categories" @click="changeTab(cat)"
+                    :class="activeTab === cat ? 'bg-[#001f54] text-white shadow-lg scale-95' : 'bg-white text-gray-500 shadow-sm'"
+                    class="py-3.5 rounded-2xl border border-gray-200 text-xs font-black transition-all">
                     {{ cat }}
                 </button>
             </div>
 
-            <div v-for="match in filteredMatches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
-                <div class="h-1.5 w-full" :class="getMatchStatus(match) === '進行中' ? 'bg-red-500' : 'bg-gray-200'"></div>
-                
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-5">
-                        <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
-                        <div class="flex items-center text-xs font-black" :class="getMatchStatus(match) === '進行中' ? 'text-red-500' : 'text-gray-400'">
-                            <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                            </span>
-                            {{ getMatchStatus(match) }}
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center text-center">
-                        <div class="flex-1 font-bold text-sm text-gray-800 break-words">{{ match.Home }}</div>
-                        <div class="flex-none px-4 text-center">
-                            <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">
-                                {{ calculateScore(match.Score) }}
+            <div v-if="matches.length > 0">
+                <div v-for="match in matches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
+                    <div class="h-1.5 w-full" :class="getMatchStatus(match) === '進行中' ? 'bg-red-500' : 'bg-gray-200'"></div>
+                    
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-5">
+                            <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
+                            <div class="flex items-center text-xs font-black" :class="getMatchStatus(match) === '進行中' ? 'text-red-500' : 'text-gray-400'">
+                                <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                {{ getMatchStatus(match) }}
                             </div>
-                            <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ match.Category }}</div>
                         </div>
-                        <div class="flex-1 font-bold text-sm text-gray-800 break-words">{{ match.Away }}</div>
-                    </div>
 
-                    <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
-                        <span v-for="(s, i) in match.Score.split(/[ /]+/)" class="bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-100">
-                            {{ s }}
-                        </span>
+                        <div class="flex justify-between items-center text-center">
+                            <div class="flex-1 font-bold text-sm text-gray-800">{{ match.Home }}</div>
+                            <div class="flex-none px-4 text-center">
+                                <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ calculateScore(match.Score) }}</div>
+                                <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
+                            </div>
+                            <div class="flex-1 font-bold text-sm text-gray-800">{{ match.Away }}</div>
+                        </div>
+
+                        <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
+                            <span v-for="(s, i) in match.Score.split(/[ /]+/)" class="bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-100">
+                                {{ s }}
+                            </span>
+                        </div>
                     </div>
                 </div>
+            </div>
+            
+            <div v-else class="text-center py-20 text-gray-400 font-bold">
+                載入中... 請稍候
             </div>
         </div>
 
@@ -68,34 +72,29 @@
 
     <script>
         const { createApp } = Vue;
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m/pub?gid=0&single=true&output=csv';
+        // 妳的試算表 ID
+        const SPREADSHEET_ID = '1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m';
 
         createApp({
             data() {
                 return {
-                    matches: [], filter: '', 
+                    matches: [],
+                    activeTab: '男籃',
                     categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打']
                 }
             },
-            computed: {
-                filteredMatches() {
-                    return this.filter ? this.matches.filter(m => m.Category.includes(this.filter)) : this.matches;
-                }
-            },
             methods: {
+                changeTab(cat) {
+                    this.activeTab = cat;
+                    this.getData();
+                },
                 getMatchStatus(match) {
-                    // 1. 如果有填比分，就是已結束
                     if (match.Score && match.Score.trim() !== '') return '已結束';
-                    
-                    // 2. 判斷時間
                     const now = new Date();
                     const [h, m] = match.Time.split(':').map(n => parseInt(n));
-                    if (isNaN(h)) return '未開賽'; // 防止時間格式填錯
-                    
+                    if (isNaN(h)) return '未開賽';
                     const matchTime = new Date();
                     matchTime.setHours(h, m, 0);
-
-                    // 3. 如果現在時間大於開賽時間且沒比分，就是進行中
                     return now >= matchTime ? '進行中' : '未開賽';
                 },
                 calculateScore(s) {
@@ -114,17 +113,22 @@
                 },
                 async getData() {
                     try {
-                        const res = await fetch(SHEET_URL + '&t=' + Date.now());
+                        // 利用 sheet 名稱來動態抓取對應的分頁
+                        const url = `https://docs.google.com/spreadsheets/d/e/2PACX-${SPREADSHEET_ID}/pub?sheet=${encodeURIComponent(this.activeTab)}&output=csv&t=${Date.now()}`;
+                        const res = await fetch(url);
                         const text = await res.text();
                         const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
                         this.matches = rows.map((r, i) => {
                             const c = r.split(',').map(v => v.replace(/^"|"$/g, '').trim());
-                            return { id: i, Time: c[0] || '08:00', Category: c[1] || '', Home: c[2] || '隊伍A', Away: c[3] || '隊伍B', Score: c[4] || '' };
+                            return { id: i, Time: c[0] || '08:00', Home: c[2] || '隊伍A', Away: c[3] || '隊伍B', Score: c[4] || '' };
                         });
-                    } catch (e) { console.log("Update Error"); }
+                    } catch (e) { console.log("Fetch Error"); }
                 }
             },
-            mounted() { this.getData(); setInterval(this.getData, 20000); }
+            mounted() {
+                this.getData();
+                setInterval(this.getData, 20000); // 每 20 秒自動刷新當前分頁
+            }
         }).mount('#app');
     </script>
 </body>
