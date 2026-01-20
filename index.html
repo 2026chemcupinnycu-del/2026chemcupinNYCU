@@ -34,29 +34,43 @@
                         'bg-gray-200': getMatchStatus(match) === '未開賽'
                     }"></div>
                     
-                    <div class="flex items-center text-xs font-black" :class="{
-                        'text-red-500': getMatchStatus(match) === '進行中',
-                        'text-[#001f54]': getMatchStatus(match) === '已結束',
-                        'text-gray-400': getMatchStatus(match) === '未開賽'
-                    }">
-                        <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                        </span>
-                        {{ getMatchStatus(match) }}
-                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-5">
+                            <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
+                            <div class="flex items-center text-xs font-black" :class="{
+                                'text-red-500': getMatchStatus(match) === '進行中',
+                                'text-[#001f54]': getMatchStatus(match) === '已結束',
+                                'text-gray-400': getMatchStatus(match) === '未開賽'
+                            }">
+                                <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                {{ getMatchStatus(match) }}
+                            </div>
+                        </div>
 
                         <div class="flex justify-between items-center text-center">
-                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'home')" class="text-xl h-6 mb-1">👑</div>
+                                <div v-else class="h-6 mb-1"></div>
+                                <div class="font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
+                            </div>
+
                             <div class="flex-none px-4 text-center">
                                 <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ displayScore(match.Score) }}</div>
                                 <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
                             </div>
-                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
+
+                            <div class="flex-1 flex flex-col items-center">
+                                <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'away')" class="text-xl h-6 mb-1">👑</div>
+                                <div v-else class="h-6 mb-1"></div>
+                                <div class="font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
+                            </div>
                         </div>
 
-                        <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
-                            <span v-for="(s, i) in match.Score.split(/[ /]+/)" class="bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-100">
+                        <div v-if="match.Score && match.Score.trim() !== ''" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
+                            <span v-for="(s, i) in splitScores(match.Score)" class="bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-100">
                                 {{ s }}
                             </span>
                         </div>
@@ -68,38 +82,40 @@
             <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無賽程</div>
         </div>
 
-<footer class="mt-12 px-5 pb-10 text-center">
-    <div class="h-px bg-gray-200 w-full mb-8"></div>
-    
-    <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] mb-6">Sponsored By</p>
-    
-    <div class="flex justify-center items-center gap-8 mb-8">
-        <div class="w-32 flex items-center justify-center">
-            <img src="sp2.png?v=2026" class="w-full h-auto object-contain transition-all" alt="Sponsor 1">
-        </div>
-        <div class="w-32 flex items-center justify-center">
-            <img src="sp3.png?v=2026" class="w-full h-auto object-contain transition-all" alt="Sponsor 2">
-        </div>
+        <footer class="mt-12 px-5 pb-10 text-center">
+            <div class="h-px bg-gray-200 w-full mb-8"></div>
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] mb-6">Sponsored By</p>
+            
+            <div class="flex justify-center items-center gap-8 mb-8">
+                <div class="w-32 flex items-center justify-center">
+                    <img src="sp2.png?v=color" class="w-full h-auto object-contain transition-all" alt="Sponsor 1">
+                </div>
+                <div class="w-32 flex items-center justify-center">
+                    <img src="sp3.png?v=color" class="w-full h-auto object-contain transition-all" alt="Sponsor 2">
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center gap-6 mb-8">
+                <div class="w-16 h-16 flex items-center justify-center">
+                    <img src="sp1.png?v=color" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 3">
+                </div>
+                <div class="w-16 h-16 flex items-center justify-center">
+                    <img src="sp4.png?v=color" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 4">
+                </div>
+                <div class="w-16 h-16 flex items-center justify-center">
+                    <img src="sp5.png?v=color" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 5">
+                </div>
+            </div>
+
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">2026 Chemistry Cup in NYCU</p>
+            
+            <div id="busuanzi_container_site_pv" class="text-[9px] text-gray-400 font-bold mt-4 opacity-60">
+                點閱人數：<span id="busuanzi_value_site_pv">--</span> 次
+            </div>
+        </footer>
     </div>
 
-    <div class="flex justify-center items-center gap-6 mb-8">
-        <div class="w-16 h-16 flex items-center justify-center">
-            <img src="sp1.png?v=2026" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 3">
-        </div>
-        <div class="w-16 h-16 flex items-center justify-center">
-            <img src="sp4.png?v=2026" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 4">
-        </div>
-        <div class="w-16 h-16 flex items-center justify-center">
-            <img src="sp5.png?v=2026" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 5">
-        </div>
-    </div>
-
-    <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">2026 Chemistry Cup in NYCU</p>
-    <p class="text-[9px] text-gray-400 font-bold mt-4">
-    點閱人數：<span id="busuanzi_value_site_pv">...</span> 次
-</p>
-</footer>
-    </div> <script>
+    <script>
         const { createApp } = Vue;
         const SID = '1vTGpEp5--XyPDP-qR-7Xt66eQHerQZcEbYcG1EX7O0lLExtq91nmlEbu2TLEWd5gg5XnXV4hPYG0m-m';
 
