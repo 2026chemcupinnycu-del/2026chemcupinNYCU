@@ -28,19 +28,23 @@
 
             <div v-if="!loading && matches.length > 0">
                 <div v-for="match in matches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
-                    <div class="h-1.5 w-full" :class="getMatchStatus(match) === '進行中' ? 'bg-red-500' : 'bg-gray-200'"></div>
+                    <div class="h-1.5 w-full" :class="{
+                        'bg-red-500': getMatchStatus(match) === '進行中',
+                        'bg-[#001f54]': getMatchStatus(match) === '已結束',
+                        'bg-gray-200': getMatchStatus(match) === '未開賽'
+                    }"></div>
                     
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-5">
-                            <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
-                            <div class="flex items-center text-xs font-black" :class="getMatchStatus(match) === '進行中' ? 'text-red-500' : 'text-gray-400'">
-                                <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                                </span>
-                                {{ getMatchStatus(match) }}
-                            </div>
-                        </div>
+                    <div class="flex items-center text-xs font-black" :class="{
+                        'text-red-500': getMatchStatus(match) === '進行中',
+                        'text-[#001f54]': getMatchStatus(match) === '已結束',
+                        'text-gray-400': getMatchStatus(match) === '未開賽'
+                    }">
+                        <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                        {{ getMatchStatus(match) }}
+                    </div>
 
                         <div class="flex justify-between items-center text-center">
                             <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
