@@ -20,7 +20,7 @@
             <div class="grid grid-cols-2 gap-2 mb-8">
                 <button v-for="cat in categories" @click="changeTab(cat)"
                     :class="activeTab === cat ? 'bg-[#001f54] text-white shadow-lg scale-95' : 'bg-white text-gray-500 shadow-sm'"
-                    class="py-3.5 rounded-2xl border border-gray-200 text-[11px] font-black transition-all">
+                    class="py-3.5 rounded-2xl border border-gray-200 text-[11px] font-black transition-all active:scale-90">
                     {{ cat }}
                 </button>
             </div>
@@ -42,22 +42,12 @@
                         </div>
 
                         <div class="flex justify-between items-center text-center">
-                            <div class="flex-1 flex flex-col items-center">
-                                <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'home')" class="text-xl h-6 mb-1">👑</div>
-                                <div v-else class="h-6 mb-1"></div>
-                                <div class="font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
-                            </div>
-
+                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
                             <div class="flex-none px-4 text-center">
                                 <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ displayScore(match.Score) }}</div>
                                 <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
                             </div>
-
-                            <div class="flex-1 flex flex-col items-center">
-                                <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'away')" class="text-xl h-6 mb-1">👑</div>
-                                <div v-else class="h-6 mb-1"></div>
-                                <div class="font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
-                            </div>
+                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
                         </div>
 
                         <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
@@ -70,7 +60,7 @@
             </div>
             
             <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">SYNCING...</div>
-            <div v-else class="text-center py-20 text-gray-400 font-bold">目前暫無賽程</div>
+            <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無賽程</div>
         </div>
 
         <footer class="mt-8 px-5 text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">NYCU Chemistry 2026</footer>
@@ -88,51 +78,54 @@
                     loading: false,
                     categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打'],
                     gidMap: {
-                        '男籃': '0', '女籃': '1525132450', '男排': '1646878380', '女排': '1843573624', 
-                        '羽球團體': '756676645', '男子單打': '124041338', '男子雙打': '977181851', '女子單打': '837944817'
+                        '男籃': '0',
+                        '女籃': '1525132450', 
+                        '男排': '1646878380', 
+                        '女排': '1843573624', 
+                        '羽球團體': '756676645',
+                        '男子單打': '124041338',
+                        '男子雙打': '977181851',
+                        '女子單打': '837944817'
                     }
                 }
             },
             methods: {
-                async changeTab(cat) { this.activeTab = cat; await this.getData(); },
+                async changeTab(cat) {
+                    this.activeTab = cat;
+                    await this.getData();
+                },
                 getMatchStatus(match) {
                     if (match.Score && match.Score.trim() !== '' && match.Score.includes(':')) return '已結束';
                     const now = new Date();
                     const [h, m] = (match.Time || "08:00").split(':').map(n => parseInt(n));
-                    const matchTime = new Date(); matchTime.setHours(h, m, 0);
+                    if (isNaN(h)) return '未開賽';
+                    const matchTime = new Date();
+                    matchTime.setHours(h, m, 0);
                     return now >= matchTime ? '進行中' : '未開賽';
-                },
-                isWinner(match, side) {
-                    if (!match.Score || !match.Score.includes(':')) return false;
-                    const gs = match.Score.split(/[ /]+/);
-                    let hVal = 0, aVal = 0;
-                    
-                    if (this.activeTab.includes('籃')) {
-                        gs.forEach(g => {
-                            const p = g.split(':').map(n => parseInt(n));
-                            if (p.length === 2) { hVal += p[0]; aVal += p[1]; }
-                        });
-                    } else {
-                        gs.forEach(g => {
-                            const p = g.split(':').map(n => parseInt(n));
-                            if (p.length === 2) { if (p[0] > p[1]) hVal++; else if (p[1] > p[0]) aVal++; }
-                        });
-                    }
-                    if (hVal === aVal) return false;
-                    return side === 'home' ? hVal > aVal : aVal > hVal;
                 },
                 displayScore(s) {
                     if (!s || !s.includes(':')) return 'VS';
                     const gs = s.split(/[ /]+/);
-                    let h = 0, a = 0;
+                    
+                    if (this.activeTab.includes('籃')) {
+                        let totalH = 0, totalA = 0;
+                        gs.forEach(g => {
+                            const p = g.split(':').map(n => parseInt(n));
+                            if (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) {
+                                totalH += p[0]; totalA += p[1];
+                            }
+                        });
+                        return totalH + ':' + totalA;
+                    } 
+                    
+                    let hWins = 0, aWins = 0;
                     gs.forEach(g => {
                         const p = g.split(':').map(n => parseInt(n));
-                        if (p.length === 2) {
-                            if (this.activeTab.includes('籃')) { h += p[0]; a += p[1]; }
-                            else { if (p[0] > p[1]) h++; else if (p[1] > p[0]) a++; }
+                        if (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) {
+                            if (p[0] > p[1]) hWins++; else if (p[1] > p[0]) aWins++;
                         }
                     });
-                    return h + ':' + a;
+                    return hWins + ':' + aWins;
                 },
                 async getData() {
                     this.loading = true;
