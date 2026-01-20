@@ -28,6 +28,7 @@
             <div v-if="!loading && matches.length > 0">
                 <div v-for="match in matches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
                     <div class="h-1.5 w-full" :class="getMatchStatus(match) === '進行中' ? 'bg-red-500' : 'bg-gray-200'"></div>
+                    
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-5">
                             <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
@@ -41,12 +42,20 @@
                         </div>
 
                         <div class="flex justify-between items-center text-center">
-                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
+                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">
+                                <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'home')" class="text-lg mb-1">👑</div>
+                                {{ match.Home }}
+                            </div>
+
                             <div class="flex-none px-4 text-center">
                                 <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ calculateScore(match.Score) }}</div>
                                 <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
                             </div>
-                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
+
+                            <div class="flex-1 font-bold text-[14px] text-gray-800 break-words leading-tight">
+                                <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'away')" class="text-lg mb-1">👑</div>
+                                {{ match.Away }}
+                            </div>
                         </div>
 
                         <div v-if="match.Score && match.Score.includes(':')" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
@@ -57,13 +66,12 @@
                     </div>
                 </div>
             </div>
+            
             <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">SYNCING...</div>
             <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無賽程</div>
         </div>
 
-        <footer class="mt-8 px-5 text-center">
-            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">NYCU Chemistry 2026</p>
-        </footer>
+        <footer class="mt-8 px-5 text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">NYCU Chemistry 2026</footer>
     </div>
 
     <script>
@@ -77,16 +85,15 @@
                     activeTab: '男籃',
                     loading: false,
                     categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打'],
-                    // 🚨 請把這裡的數字換成妳在 Excel 分頁網址看到的 gid 數字 🚨
                     gidMap: {
-                        '男籃':'0',
-                        '女籃':'1525132450', // 換成女籃分頁的 gid
-                        '男排':'1646878380', // 換成男排分頁的 gid
-                        '女排':'1843573624',
-                        '羽球團體':'756676645',
-                        '男子單打':'124041338',
-                        '男子雙打':'977181851',
-                        '女子單打':'837944817'
+                        '男籃': '0',
+                        '女籃': '1692110298', 
+                        '男排': '2126296766', 
+                        '女排': '這裡填女排gid', 
+                        '羽球團體': '這裡填羽球gid',
+                        '男子單打': '這裡填男單gid',
+                        '男子雙打': '這裡填男雙gid',
+                        '女子單打': '這裡填女單gid'
                     }
                 }
             },
@@ -103,6 +110,28 @@
                     const matchTime = new Date();
                     matchTime.setHours(h, m, 0);
                     return now >= matchTime ? '進行中' : '未開賽';
+                },
+                // 判斷贏家的邏輯
+                isWinner(match, side) {
+                    if (!match.Score || !match.Score.includes(':')) return false;
+                    const gs = match.Score.split(/[ /]+/);
+                    let h = 0, a = 0;
+                    gs.forEach(g => {
+                        const p = g.split(':');
+                        if (p.length === 2) {
+                            const p1 = parseInt(p[0]); const p2 = parseInt(p[1]);
+                            if (p1 > p2) h++; else if (p2 > p1) a++;
+                        }
+                    });
+                    
+                    // 籃球大分判斷
+                    if (gs.length === 1 && parseInt(gs[0].split(':')[0]) > 30) {
+                        const p = gs[0].split(':');
+                        h = parseInt(p[0]); a = parseInt(p[1]);
+                    }
+
+                    if (h === a) return false;
+                    return side === 'home' ? h > a : a > h;
                 },
                 calculateScore(s) {
                     if (!s || !s.includes(':')) return 'VS';
@@ -128,7 +157,7 @@
                         const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
                         this.matches = rows.map((r, i) => {
                             const c = r.split(',').map(v => v.replace(/^"|"$/g, '').trim());
-                            return { id: i, Time: c[0], Category: c[1], Home: c[2], Away: c[3], Score: c[4] || '' };
+                            return { id: i, Time: c[0] || '08:00', Home: c[2] || 'TBD', Away: c[3] || 'TBD', Score: c[4] || '' };
                         });
                     } catch (e) { this.matches = []; }
                     finally { this.loading = false; }
