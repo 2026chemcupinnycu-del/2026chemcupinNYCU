@@ -73,6 +73,8 @@
                 startSmartDraw() {
                     const teams = [...this.currentTeams];
                     const schoolGroups = {};
+                    
+                    // 1. 校名判定
                     teams.forEach(t => {
                         let k = t;
                         if (!t.includes("聯隊")) {
@@ -83,16 +85,33 @@
                         if (!schoolGroups[k]) schoolGroups[k] = [];
                         schoolGroups[k].push(t);
                     });
+
+                    // 2. [核心優化] 將校系順序徹底打亂
                     let keys = Object.keys(schoolGroups).sort(() => Math.random() - 0.5);
                     let balancedList = [];
                     const max = Math.max(...Object.values(schoolGroups).map(a => a.length));
+                    
+                    // 3. [核心優化] 用交錯方式填入，但每一輪的起始點都不同
                     for (let i = 0; i < max; i++) {
-                        keys.forEach(k => { if (schoolGroups[k][i]) balancedList.push(schoolGroups[k][i]); });
+                        // 每一輪都重新打亂校系順序，避免 B 隊一直跟在 A 隊後面
+                        keys = keys.sort(() => Math.random() - 0.5);
+                        keys.forEach(k => { 
+                            if (schoolGroups[k][i]) balancedList.push(schoolGroups[k][i]); 
+                        });
                     }
+
                     const config = this.categoryData[this.selectedCategory];
-                    let current = 0, tempGroups = [];
-                    for(let i=0; i<config.num4; i++) { tempGroups.push(balancedList.slice(current, current + 4)); current += 4; }
-                    for(let i=0; i<config.num3; i++) { tempGroups.push(balancedList.slice(current, current + 3)); current += 3; }
+                    let tempGroups = [];
+                    // 先定義好空的組別容器
+                    const totalGroups = config.num4 + config.num3;
+                    for(let i=0; i<totalGroups; i++) tempGroups.push([]);
+
+                    // 4. [核心優化] 蛇形填入法：確保同校隊伍被拉開到最遠的距離
+                    balancedList.forEach((team, index) => {
+                        tempGroups[index % totalGroups].push(team);
+                    });
+
+                    // 5. 最後將每組內部的序號打亂
                     this.groups = tempGroups.map((g, i) => ({
                         name: String.fromCharCode(65 + i) + '組',
                         teams: g.sort(() => Math.random() - 0.5)
