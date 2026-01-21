@@ -1,124 +1,92 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 大化盃抽籤系統</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 p-5">
-    <div id="draw-app" class="max-w-5xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-black text-[#001f54] mb-2">2026 大化盃預賽抽籤</h1>
-            <div class="mt-4 flex flex-col items-center">
-                <select v-model="selectedCategory" @change="resetDraw" class="bg-white border-2 border-[#001f54] text-[#001f54] font-black py-2 px-6 rounded-xl shadow-sm focus:outline-none">
-                    <option v-for="(data, cat) in categoryData" :key="cat" :value="cat">{{ cat }}</option>
-                </select>
-            </div>
-            <div class="mt-4 inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-bold">
-                {{ selectedCategory }}：共 {{ currentTeams.length }} {{ selectedCategory.includes('雙打') ? '組' : '隊' }}
-            </div>
-            <p class="text-gray-400 text-[10px] mt-3 font-bold uppercase tracking-wider">規則：同校迴避</p>
-        </header>
-
-        <div class="text-center mb-10">
-            <button @click="startSmartDraw" class="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black py-4 px-12 rounded-2xl shadow-xl transition-all active:scale-95 text-xl border-b-4 border-yellow-600">
-                🎲 開始「{{ selectedCategory }}」抽籤
-            </button>
-        </div>
-
-        <div v-if="groups.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div v-for="group in groups" :key="group.name" class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-                <div class="bg-[#001f54] text-white py-4 text-center font-black tracking-widest text-lg">
-                    {{ group.name }} <span class="text-yellow-400 text-sm">({{ group.teams.length }})</span>
-                </div>
-                <div class="p-6">
-                    <ul class="space-y-3">
-                        <li v-for="(team, idx) in group.teams" class="flex items-center font-bold text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                            <span class="w-10 h-10 bg-[#001f54] text-white rounded-lg flex items-center justify-center text-xs mr-4 shadow-sm flex-none">
-                                {{ group.name.charAt(0) }}{{ idx + 1 }}
-                            </span>
-                            <span class="text-[14px] truncate">{{ team }}</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const { createApp } = Vue;
-        createApp({
-            data() {
-                return {
-                    selectedCategory: '男籃',
-                    groups: [],
-                    categoryData: {
-                        '男籃': { num4: 3, num3: 3, teams: ["中山醫化", "東海化學", "臺師範化學", "淡江化材", "嘉大應化", "成大化學A", "成大化學B", "淡江化學", "南大綠能", "中興化學", "高醫醫化A", "高醫醫化B", "台大化學", "清大化學", "中正化生", "中原化學", "交大應化A", "交大應化B", "東吳化學", "輔仁化學A", "輔仁化學B"]},
-                        '男排': { num4: 1, num3: 8, teams: ["暨大應化", "彰師範化學", "東海化材聯隊", "臺師範化學", "中山醫化", "淡江化學", "東華化材聯隊", "台大農生聯隊A", "台大農生聯隊B", "中興化學A", "中興化學B", "成大化學A", "成大化學B", "中央化學", "高師大化學", "高醫醫化", "台大化學", "中正化生", "長庚化材", "淡江化材", "中原化學A", "中原化學B", "輔仁化學", "清大化學A", "清大化學B", "清大化學C", "交大應化A", "交大應化B"]},
-                        '女排': { num4: 0, num3: 6, teams: ["中山化學", "臺師範化學", "中原化學", "彰師範化學", "台大農生聯隊", "中山醫化", "東海化學", "台大化學", "淡江化學", "中興化學", "成大化學", "高醫醫化", "輔仁化學", "清大化學", "中正化生", "淡江化材", "交大應化A", "交大應化B"]},
-                        '羽球團體': { num4: 2, num3: 5, teams: ["中央化學A", "中央化學B", "臺師範化學", "中山醫化", "中興化學", "成大化學", "彰師範化學", "高醫醫化", "暨南應化A", "暨南應化B", "輔仁化學", "中正化生A", "中正化生B", "台大化學A", "台大化學B", "清大化學A", "清大化學B", "清大化學C", "中原化學", "交大應化A", "交大應化B", "交大應化C", "交大應化V"]},
-                        '男子單打': { num4: 0, num3: 18, teams: ["臺師範化學張皓鈞", "台大化學傅琮祐", "屏東化學林均翰", "台大化學吳星毅", "中央化學李凡邑", "台大化學黃士晏", "成大化學黃聖明", "台大化學張睿宸", "成大化學李秉澍", "台大化學趙家樂", "中興化學張立昕", "台大化學游閔瀚", "中興化學黃竑維", "台大化學姜伯叡", "中興化學劉家齊", "台大化學江檀", "中興化學曹祐瑋", "台大化學周首安", "成大化學胡宇創", "台大化學李沛澤", "彰師範化學游奇", "台大化學陳陞", "高醫醫化魏睿騰", "台大化學許奕恩", "高醫醫化潘柏勳", "清大化學曾成鳳", "高醫醫化黃聖凱", "清大化學黃啟瑋", "高醫醫化林敬庭", "中原化學陳華文", "高醫醫化鍾易錡", "中原化學程泰霖", "暨南應化吳承軒", "中原化學陳俊憲", "暨南應化劉竑志", "中興化學王梓祥", "暨南應化彭立宸", "交大應化李恒安", "暨南應化黃健富", "交大應化葉力綸", "輔仁化學莊振揚", "交大應化周敬軒", "輔仁化學張少謙", "交大應化劉崴倫", "輔仁化學林宥辰", "交大應化吳炫廷", "輔仁化學黃冠霖", "交大應化連宸緯", "輔仁化學楊帙翔", "交大應化謝昀廷", "中正化生謝欣宏", "靜宜應化劉宇翔", "中正化生潘昱睿", "中興化學林康立"]},
-                        '男子雙打': { num4: 0, num3: 12, teams: ["臺師範化學蔡宇軒/楊雲亘", "台大化學吳星毅/林育丞", "屏東化學林均翰/林祐琛", "台大化學林諺輝/楊子毅", "中央化學李凡邑/蔡宜叡", "台大化學張睿宸/趙家樂", "中央化學宋承憲/顏嘉佑", "交大應化李恒安/張勻敬", "中山醫化吳鴻敏/袁驊", "交大應化周敬軒/林昀陞", "臺師範化學李浚祐/黃瑞宸", "交大應化李宥頡/郭士愷", "中興化學張立昕/陳論揚", "靜宜應化林晉弘/劉宇翔", "中興化學涂育丞/陳柏宇", "交大應化黃承勛/林秉儒", "成大化學洪宇宸/劉凱汶", "高醫醫化魏睿騰/李彥儒", "高醫醫化謝政哲/王證棋", "高醫醫化黃聖凱/鍾易錡", "高醫醫化王晨旭/柯品丞", "暨南應化余韋霖/李建岑", "暨南應化吳承軒/趙昱鈞", "暨南應化黃煜宸/羅楷程", "輔大化學陳宥丞/張紘恩", "輔大化學黃冠霖/莊振揚", "輔大化學游昕倫/黃政翔", "輔大化學楊帙翔/游智勛", "中正化生魏昱凱/陳紀豐", "中正化生陳昱亘/游能耀", "中正化生孫郁傑/詹志煒", "中正化生張育瑋/謝宗諺", "清大化學陳捷一/陳尚逸", "中原化學陳華文/程泰霖", "台大化學傅琮祐/姜伯叡", "台大化學陳陞/陳翌豐"]},
-                        '女子單打': { num4: 1, num3: 2, teams: ["高醫醫化陳偲僑", "暨南應化高靖暄", "暨南應化王家慧", "輔仁化學蘇力妍", "輔仁化學邱筠婷", "中正化生謝宛諭", "交大應化楊昀容", "交大應化黃筱渝", "交大應化唐杺妤", "交大應化陳筠珊"]}
-                    }
-                }
-            },
-            computed: {
-                currentTeams() { return this.categoryData[this.selectedCategory].teams; }
-            },
-            methods: {
-                resetDraw() { this.groups = []; },
-                startSmartDraw() {
-                    const teams = [...this.currentTeams];
-                    const schoolGroups = {};
-                    
-                    // 1. 校名判定
-                    teams.forEach(t => {
-                        let k = t;
-                        if (!t.includes("聯隊")) {
-                            const schools = ["中山醫", "中山", "台大", "清大", "中興", "交大", "成大", "中原", "淡江", "高醫", "輔仁", "中央", "暨南", "中正"];
-                            for(let s of schools) { if(t.includes(s)) { k = s; break; } }
-                            if(k === t) k = t.substring(0, 2);
-                        }
-                        if (!schoolGroups[k]) schoolGroups[k] = [];
-                        schoolGroups[k].push(t);
-                    });
-
-                    // 2. [核心優化] 將校系順序徹底打亂
-                    let keys = Object.keys(schoolGroups).sort(() => Math.random() - 0.5);
-                    let balancedList = [];
-                    const max = Math.max(...Object.values(schoolGroups).map(a => a.length));
-                    
-                    // 3. [核心優化] 用交錯方式填入，但每一輪的起始點都不同
-                    for (let i = 0; i < max; i++) {
-                        // 每一輪都重新打亂校系順序，避免 B 隊一直跟在 A 隊後面
-                        keys = keys.sort(() => Math.random() - 0.5);
-                        keys.forEach(k => { 
-                            if (schoolGroups[k][i]) balancedList.push(schoolGroups[k][i]); 
-                        });
-                    }
-
-                    const config = this.categoryData[this.selectedCategory];
-                    let tempGroups = [];
-                    // 先定義好空的組別容器
-                    const totalGroups = config.num4 + config.num3;
-                    for(let i=0; i<totalGroups; i++) tempGroups.push([]);
-
-                    // 4. [核心優化] 蛇形填入法：確保同校隊伍被拉開到最遠的距離
-                    balancedList.forEach((team, index) => {
-                        tempGroups[index % totalGroups].push(team);
-                    });
-
-                    // 5. 最後將每組內部的序號打亂
-                    this.groups = tempGroups.map((g, i) => ({
-                        name: String.fromCharCode(65 + i) + '組',
-                        teams: g.sort(() => Math.random() - 0.5)
-                    }));
+<script>
+    const { createApp } = Vue;
+    createApp({
+        data() {
+            return {
+                selectedCategory: '男籃',
+                groups: [],
+                categoryData: {
+                    '男籃': { num4: 3, num3: 3, teams: ["中山醫化", "東海化學", "臺師範化學", "淡江化材", "嘉大應化", "成大化學A", "成大化學B", "淡江化學", "南大綠能", "中興化學", "高醫醫化A", "高醫醫化B", "台大化學", "清大化學", "中正化生", "中原化學", "交大應化A", "交大應化B", "東吳化學", "輔仁化學A", "輔仁化學B"]},
+                    '男排': { num4: 1, num3: 8, teams: ["暨大應化", "彰師範化學", "東海化材聯隊", "臺師範化學", "中山醫化", "淡江化學", "東華化材聯隊", "台大農生聯隊A", "台大農生聯隊B", "中興化學A", "中興化學B", "成大化學A", "成大化學B", "中央化學", "高師大化學", "高醫醫化", "台大化學", "中正化生", "長庚化材", "淡江化材", "中原化學A", "中原化學B", "輔仁化學", "清大化學A", "清大化學B", "清大化學C", "交大應化A", "交大應化B"]},
+                    '女排': { num4: 0, num3: 6, teams: ["中山化學", "臺師範化學", "中原化學", "彰師範化學", "台大農生聯隊", "中山醫化", "東海化學", "台大化學", "淡江化學", "中興化學", "成大化學", "高醫醫化", "輔仁化學", "清大化學", "中正化生", "淡江化材", "交大應化A", "交大應化B"]},
+                    '羽球團體': { num4: 2, num3: 5, teams: ["中央化學A", "中央化學B", "臺師範化學", "中山醫化", "中興化學", "成大化學", "彰師範化學", "高醫醫化", "暨南應化A", "暨南應化B", "輔仁化學", "中正化生A", "中正化生B", "台大化學A", "台大化學B", "清大化學A", "清大化學B", "清大化學C", "中原化學", "交大應化A", "交大應化B", "交大應化C", "交大應化V"]},
+                    '男子單打': { num4: 0, num3: 18, teams: ["臺師範化學張皓鈞", "台大化學傅琮祐", "屏東化學林均翰", "台大化學吳星毅", "中央化學李凡邑", "台大化學黃士晏", "成大化學黃聖明", "台大化學張睿宸", "成大化學李秉澍", "台大化學趙家樂", "中興化學張立昕", "台大化學游閔瀚", "中興化學黃竑維", "台大化學姜伯叡", "中興化學劉家齊", "台大化學江檀", "中興化學曹祐瑋", "台大化學周首安", "成大化學胡宇創", "台大化學李沛澤", "彰師範化學游奇", "台大化學陳陞", "高醫醫化魏睿騰", "台大化學許奕恩", "高醫醫化潘柏勳", "清大化學曾成鳳", "高醫醫化黃聖凱", "清大化學黃啟瑋", "高醫醫化林敬庭", "中原化學陳華文", "高醫醫化鍾易錡", "中原化學程泰霖", "暨南應化吳承軒", "中原化學陳俊憲", "暨南應化劉竑志", "中興化學王梓祥", "暨南應化彭立宸", "交大應化李恒安", "暨南應化黃健富", "交大應化葉力綸", "輔仁化學莊振揚", "交大應化周敬軒", "輔仁化學張少謙", "交大應化劉崴倫", "輔仁化學林宥辰", "交大應化吳炫廷", "輔仁化學黃冠霖", "交大應化連宸緯", "輔仁化學楊帙翔", "交大應化謝昀廷", "中正化生謝欣宏", "靜宜應化劉宇翔", "中正化生潘昱睿", "中興化學林康立"]},
+                    '男子雙打': { num4: 0, num3: 12, teams: ["臺師範化學蔡宇軒/楊雲亘", "台大化學吳星毅/林育丞", "屏東化學林均翰/林祐琛", "台大化學林諺輝/楊子毅", "中央化學李凡邑/蔡宜叡", "台大化學張睿宸/趙家樂", "中央化學宋承憲/顏嘉佑", "交大應化李恒安/張勻敬", "中山醫化吳鴻敏/袁驊", "交大應化周敬軒/林昀陞", "臺師範化學李浚祐/黃瑞宸", "交大應化李宥頡/郭士愷", "中興化學張立昕/陳論揚", "靜宜應化林晉弘/劉宇翔", "中興化學涂育丞/陳柏宇", "交大應化黃承勛/林秉儒", "成大化學洪宇宸/劉凱汶", "高醫醫化魏睿騰/李彥儒", "高醫醫化謝政哲/王證棋", "高醫醫化黃聖凱/鍾易錡", "高醫醫化王晨旭/柯品丞", "暨南應化余韋霖/李建岑", "暨南應化吳承軒/趙昱鈞", "暨南應化黃煜宸/羅楷程", "輔大化學陳宥丞/張紘恩", "輔大化學黃冠霖/莊振揚", "輔大化學游昕倫/黃政翔", "輔大化學楊帙翔/游智勛", "中正化生魏昱凱/陳紀豐", "中正化生陳昱亘/游能耀", "中正化生孫郁傑/詹志煒", "中正化生張育瑋/謝宗諺", "清大化學陳捷一/陳尚逸", "中原化學陳華文/程泰霖", "台大化學傅琮祐/姜伯叡", "台大化學陳陞/陳翌豐"]},
+                    '女子單打': { num4: 1, num3: 2, teams: ["高醫醫化陳偲僑", "暨南應化高靖暄", "暨南應化王家慧", "輔仁化學蘇力妍", "輔仁化學邱筠婷", "中正化生謝宛諭", "交大應化楊昀容", "交大應化黃筱渝", "交大應化唐杺妤", "交大應化陳筠珊"]}
                 }
             }
-        }).mount('#draw-app');
-    </script>
-</body>
-</html>
+        },
+        computed: {
+            currentTeams() { return this.categoryData[this.selectedCategory].teams; }
+        },
+        methods: {
+            resetDraw() { this.groups = []; },
+            startSmartDraw() {
+                const teams = [...this.currentTeams];
+                const schoolGroups = {};
+                
+                // 1. 智慧校名判定
+                teams.forEach(t => {
+                    let k = t;
+                    if (!t.includes("聯隊")) {
+                        const schools = ["中山醫", "中山", "台大", "清大", "中興", "交大", "成大", "中原", "淡江", "高醫", "輔仁", "中央", "暨南", "中正"];
+                        for(let s of schools) { if(t.includes(s)) { k = s; break; } }
+                        if(k === t) k = t.substring(0, 2);
+                    }
+                    if (!schoolGroups[k]) schoolGroups[k] = [];
+                    schoolGroups[k].push(t);
+                });
+
+                // 2. [核心變更] 按報名人數「由多到少」排序校系
+                let sortedSchoolKeys = Object.keys(schoolGroups).sort((a, b) => {
+                    return schoolGroups[b].length - schoolGroups[a].length;
+                });
+
+                const config = this.categoryData[this.selectedCategory];
+                const totalGroups = config.num4 + config.num3;
+                let finalGroups = Array.from({length: totalGroups}, () => []);
+
+                // 3. [核心變更] 優先處理大戶學校，並在每一輪隨機打亂組別填入順序
+                sortedSchoolKeys.forEach(schoolKey => {
+                    let schoolTeams = [...schoolGroups[schoolKey]].sort(() => Math.random() - 0.5);
+                    
+                    // 找出目前還沒滿且沒放過該校選手的組別
+                    schoolTeams.forEach(team => {
+                        // 建立一個候選組別清單：該組人數未達上限，且該組尚未有同校選手
+                        let candidates = finalGroups.map((g, idx) => ({ idx, length: g.length, teams: g }))
+                            .filter(g => {
+                                // 判斷該組的人數上限
+                                const limit = g.idx < config.num4 ? 4 : 3;
+                                const noSameSchool = !g.teams.some(existingTeam => {
+                                    // 簡單判定是否同校 (這裡用 schoolKey 比對)
+                                    return existingTeam.includes(schoolKey);
+                                });
+                                return g.length < limit && noSameSchool;
+                            });
+
+                        // 如果符合「同校迴避」的組別不只一個，隨機選一個
+                        if (candidates.length > 0) {
+                            const target = candidates[Math.floor(Math.random() * candidates.length)];
+                            finalGroups[target.idx].push(team);
+                        } else {
+                            // 萬一真的塞不下了（數學上無解時），才找人最少的組塞
+                            let mostEmpty = finalGroups.map((g, idx) => ({ idx, length: g.length }))
+                                .filter(g => {
+                                    const limit = g.idx < config.num4 ? 4 : 3;
+                                    return g.length < limit;
+                                })
+                                .sort((a, b) => a.length - b.length)[0];
+                            finalGroups[mostEmpty.idx].push(team);
+                        }
+                    });
+                });
+
+                // 4. 最後將每組內部的名單隨機打亂一次，看起來更自然
+                this.groups = finalGroups.map((g, i) => ({
+                    name: String.fromCharCode(65 + i) + '組',
+                    teams: g.sort(() => Math.random() - 0.5)
+                }));
+            }
+        }
+    }).mount('#draw-app');
+</script>
