@@ -3,40 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 大化盃抽籤系統 - 同校迴避版</title>
+    <title>2026 大化盃抽籤系統 - 官方正式版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-5">
-    <div id="draw-app" class="max-w-4xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-3xl font-black text-[#001f54]">男籃預賽抽籤</h1>
-            <p class="text-gray-500 font-bold">規則：同校系自動迴避分組</p>
+    <div id="draw-app" class="max-w-5xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-black text-[#001f54] mb-2">2026 大化盃預賽抽籤</h1>
+            <div class="inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-bold">
+                男籃 21 隊：3組(4隊) + 3組(3隊)
+            </div>
+            <p class="text-gray-400 text-xs mt-3">系統規則：同校系自動迴避分組</p>
         </header>
 
         <div class="text-center mb-10">
-            <button @click="startSmartDraw" class="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black py-4 px-10 rounded-full shadow-lg transition-transform active:scale-95 text-xl">
-                🎲 開始「同校迴避」抽籤
+            <button @click="startSmartDraw" class="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black py-4 px-12 rounded-2xl shadow-xl transition-all active:scale-95 text-xl border-b-4 border-yellow-600">
+                🎲 開始同校迴避抽籤
             </button>
         </div>
 
         <div v-if="groups.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div v-for="group in groups" :key="group.name" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="bg-[#001f54] text-white py-3 text-center font-black">
-                    {{ group.name }} ({{ group.teams.length }} 隊)
+            <div v-for="group in groups" :key="group.name" class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
+                <div class="bg-[#001f54] text-white py-4 text-center font-black tracking-widest text-lg">
+                    {{ group.name }} <span class="text-yellow-400 text-sm">({{ group.teams.length }}隊)</span>
                 </div>
-                <div class="p-5">
-                    <ul class="space-y-3">
-                        <li v-for="(team, idx) in group.teams" class="flex items-center font-bold text-gray-700">
-                            <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-xs mr-3 text-gray-400">
-                                {{ group.name }}{{ idx + 1 }}
+                <div class="p-6">
+                    <ul class="space-y-4">
+                        <li v-for="(team, idx) in group.teams" class="flex items-center font-bold text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <span class="w-10 h-10 bg-[#001f54] text-white rounded-lg flex items-center justify-center text-xs mr-4 shadow-sm">
+                                {{ group.name.charAt(0) }}{{ idx + 1 }}
                             </span>
-                            {{ team }}
+                            <span class="text-[15px]">{{ team }}</span>
                         </li>
                     </ul>
                 </div>
             </div>
         </div>
+
+        <footer class="mt-12 text-center text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+            2026 Chemistry Cup Lottery System
+        </footer>
     </div>
 
     <script>
@@ -44,59 +51,21 @@
         createApp({
             data() {
                 return {
-                    // 名單範例：請確保同校系的名稱包含相同的關鍵字（如：中興A、中興B）
+                    // 正式 21 隊名單
                     rawTeams: [
-                        "中興化學A", "中興化學B", "交大化學", "清大化學A", "清大化學B", 
-                        "台大化學", "成大化學", "中央化學", "中山化學", "中正化學",
-                        "師大化學", "彰師化學", "高師化學", "東大化學", "淡大化學",
-                        "輔大化學", "東海化學", "逢甲化學", "中原化學", "文化化學", "靜宜化學"
+                        "中山醫化", "東海化學", "臺師範化學", "淡江化材", "嘉大應化", 
+                        "成大化學A", "成大化學B", "淡江化學", "南大綠能", "中興化學", 
+                        "高醫醫化A", "高醫醫化B", "台大化學", "清大化學", "中正化生", 
+                        "中原化學", "交大應化A", "交大應化B", "東吳化學", "輔仁化學A", "輔仁化學B"
                     ],
                     groups: []
                 }
             },
             methods: {
                 startSmartDraw() {
-                    // 1. 先將隊伍按校系分群
+                    // 1. 同校判定邏輯 (取前兩個字作為校名關鍵字)
                     const schoolGroups = {};
                     this.rawTeams.forEach(team => {
-                        // 這裡假設名稱前兩個字是校名，例如「中興」、「清大」
-                        const school = team.substring(0, 2); 
-                        if (!schoolGroups[school]) schoolGroups[school] = [];
-                        schoolGroups[school].push(team);
-                    });
-
-                    // 2. 將分群後的隊伍打亂，並展開成一個「交錯」的清單
-                    let schools = Object.keys(schoolGroups).sort(() => Math.random() - 0.5);
-                    let balancedList = [];
-                    
-                    // 取得最多隊伍的學校數量
-                    const maxPerSchool = Math.max(...Object.values(schoolGroups).map(a => a.length));
-                    
-                    for (let i = 0; i < maxPerSchool; i++) {
-                        schools.forEach(school => {
-                            if (schoolGroups[school][i]) {
-                                balancedList.push(schoolGroups[school][i]);
-                            }
-                        });
-                    }
-
-                    // 3. 設定分組結構 (A,B,C組 4人; D,E,F組 3人)
-                    const structure = [
-                        { name: 'A組', count: 4 }, { name: 'B組', count: 4 }, { name: 'C組', count: 4 },
-                        { name: 'D組', count: 3 }, { name: 'E組', count: 3 }, { name: 'F組', count: 3 }
-                    ];
-
-                    // 4. 分配進入組別
-                    let current = 0;
-                    this.groups = structure.map(group => {
-                        const teams = balancedList.slice(current, current + group.count);
-                        current += group.count;
-                        // 組內再小打亂一下順序
-                        return { name: group.name, teams: teams.sort(() => Math.random() - 0.5) };
-                    });
-                }
-            }
-        }).mount('#draw-app');
-    </script>
-</body>
-</html>
+                        let schoolKey = team.substring(0, 2);
+                        // 特殊處理：淡江化材與淡江化學
+                        if(team.includes("淡江")) schoolKey = "淡江";
