@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 大化盃抽籤系統 - 官方正式版</title>
+    <title>2026 大化盃抽籤系統 - 正式版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -51,7 +51,6 @@
         createApp({
             data() {
                 return {
-                    // 正式 21 隊名單
                     rawTeams: [
                         "中山醫化", "東海化學", "臺師範化學", "淡江化材", "嘉大應化", 
                         "成大化學A", "成大化學B", "淡江化學", "南大綠能", "中興化學", 
@@ -63,13 +62,50 @@
             },
             methods: {
                 startSmartDraw() {
-                    // 1. 同校判定邏輯 (取前兩個字作為校名關鍵字)
+                    // 1. 同校判定邏輯
                     const schoolGroups = {};
                     this.rawTeams.forEach(team => {
                         let schoolKey = team.substring(0, 2);
-                        // 特殊處理：淡江化材與淡江化學
                         if(team.includes("淡江")) schoolKey = "淡江";
-    }).mount('#draw-app');
+                        if(team.includes("交大")) schoolKey = "交大";
+                        if(team.includes("成大")) schoolKey = "成大";
+                        if(team.includes("高醫")) schoolKey = "高醫";
+                        if(team.includes("輔仁")) schoolKey = "輔仁";
+                        
+                        if (!schoolGroups[schoolKey]) schoolGroups[schoolKey] = [];
+                        schoolGroups[schoolKey].push(team);
+                    });
+
+                    // 2. 打亂校系順序
+                    let schools = Object.keys(schoolGroups).sort(() => Math.random() - 0.5);
+                    let balancedList = [];
+                    const maxPerSchool = Math.max(...Object.values(schoolGroups).map(a => a.length));
+                    
+                    // 3. 交錯填入名單
+                    for (let i = 0; i < maxPerSchool; i++) {
+                        schools.forEach(school => {
+                            if (schoolGroups[school][i]) {
+                                balancedList.push(schoolGroups[school][i]);
+                            }
+                        });
+                    }
+
+                    // 4. 定義分組結構
+                    const structure = [
+                        { name: 'A組', count: 4 }, { name: 'B組', count: 4 }, { name: 'C組', count: 4 },
+                        { name: 'D組', count: 3 }, { name: 'E組', count: 3 }, { name: 'F組', count: 3 }
+                    ];
+
+                    // 5. 分配進入組別
+                    let current = 0;
+                    this.groups = structure.map(group => {
+                        const teams = balancedList.slice(current, current + group.count);
+                        current += group.count;
+                        return { name: group.name, teams: teams.sort(() => Math.random() - 0.5) };
+                    });
+                }
+            }
+        }).mount('#draw-app');
     </script>
 </body>
 </html>
