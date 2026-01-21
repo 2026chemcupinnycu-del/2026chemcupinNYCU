@@ -22,9 +22,11 @@
             <p class="text-gray-400 text-[10px] mt-3 font-bold uppercase tracking-wider">規則：大戶優先分配 & 同校迴避</p>
         </header>
 
-        <div class="text-center mb-10">
-            <button @click="startSmartDraw" class="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black py-4 px-12 rounded-2xl shadow-xl transition-all active:scale-95 text-xl border-b-4 border-yellow-600">
-                🎲 開始抽籤
+        <div class="text-center mb-10 space-x-4">
+            <button @click="startSmartDraw" ...>🎲 開始抽籤</button>
+            
+            <button v-if="groups.length > 0" @click="downloadCSV" class="bg-green-500 hover:bg-green-600 text-white font-black py-4 px-10 rounded-2xl shadow-xl transition-all active:scale-95 text-xl border-b-4 border-green-700">
+                📥 下載 CSV 檔案
             </button>
         </div>
 
@@ -119,6 +121,35 @@
                         name: String.fromCharCode(65 + i) + '組',
                         teams: g.sort(() => Math.random() - 0.5)
                     }));
+                    downloadCSV() {
+                        // 1. 定義 CSV 標頭與內容
+                        let csvContent = "\uFEFF"; // 加入 UTF-8 BOM，確保 Excel 打開不會亂碼
+                        csvContent += "項目,組別,序號,隊伍/選手名稱\n";
+                
+                        // 2. 遍歷所有的分組資料
+                        this.groups.forEach(group => {
+                            group.teams.forEach((team, index) => {
+                                const row = [
+                                    this.selectedCategory,
+                                    group.name,
+                                    group.name.charAt(0) + (index + 1),
+                                    team
+                                ].join(",");
+                                csvContent += row + "\n";
+                            });
+                        });
+                
+                        // 3. 建立下載連結並自動點擊
+                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", `${this.selectedCategory}_抽籤結果.csv`);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
                 }
             }
         }).mount('#draw-app');
