@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 大化盃抽籤系統</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+<header class="text-center mb-8">
+    <h1 class="text-3xl font-black text-[#001f54] mb-2">2026 大化盃預賽抽籤</h1>
+    <div class="mt-4 flex flex-col items-center">
+        <select v-model="selectedCategory" @change="resetDraw" class="bg-white border-2 border-[#001f54] text-[#001f54] font-black py-2 px-6 rounded-xl shadow-sm focus:outline-none">
+            <option v-for="(data, cat) in categoryData" :key="cat" :value="cat">{{ cat }}</option>
+        </select>
+    </div>
+    <div class="mt-4 inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-bold">
+        {{ selectedCategory }}：共 {{ currentTeams.length }} 人/隊
+    </div>
+    <p class="text-red-500 text-[12px] mt-3 font-bold uppercase tracking-wider">
+        規則：{{ displayRule }}
+    </p>
+</header>
 <body class="bg-gray-50 p-5">
     <div id="draw-app" class="max-w-5xl mx-auto">
         <header class="text-center mb-8">
@@ -78,7 +85,13 @@
             }
         },
         computed: {
-            currentTeams() { return this.categoryData[this.selectedCategory].teams; }
+            currentTeams() { return this.categoryData[this.selectedCategory].teams; },
+            displayRule() {
+                if (this.selectedCategory === '男排' || this.selectedCategory === '女排') {
+                    return "同校系迴避 (前三字) ＋ 去年冠亞季殿分開";
+                }
+                return "同校系迴避 (前三字)";
+            }
         },
         methods: {
             resetDraw() { this.groups = []; },
