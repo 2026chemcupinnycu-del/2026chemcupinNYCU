@@ -6,47 +6,45 @@
     <title>2026 大化盃比分牆</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </head>
 <body class="bg-gray-100">
     <div id="app" class="max-w-md mx-auto min-h-screen pb-10">
         
-        <header class="bg-[#001f54] text-white p-8 rounded-b-[2.5rem] shadow-xl mb-8 text-center border-b-4 border-yellow-400">
+        <header class="bg-[#001f54] text-white p-8 rounded-b-[2.5rem] shadow-xl mb-6 text-center border-b-4 border-yellow-400">
             <h1 class="text-3xl font-black mb-1">2026 大化盃</h1>
             <div class="inline-block bg-yellow-400 text-blue-900 px-3 py-0.5 rounded-full text-xs font-black mb-2">in NYCU</div>
             <p class="text-blue-100 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase">Live Score System</p>
         </header>
 
         <div class="px-5">
-        <div class="grid grid-cols-3 gap-3 mb-8">
-            <button v-for="cat in categories" @click="changeTab(cat)"
-                :class="activeTab === cat ? 'bg-[#001f54] text-white shadow-lg scale-95' : 'bg-white text-gray-500 shadow-sm'"
-                class="py-3 rounded-xl border border-gray-200 text-[11px] font-black transition-all active:scale-90">
-                {{ cat }}
-            </button>
-        </div>
-        
-        <div class="grid grid-cols-1 gap-6 max-w-md mx-auto">
-            <div v-for="group in filteredGroups" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h3 class="font-bold text-[#001f54] mb-3">{{ group.name }}</h3>
-                </div>
-        </div>
-            <div v-if="!loading && matches.length > 0">
-                <div v-for="match in matches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
-                    <div class="h-1.5 w-full" :class="{
-                        'bg-red-500': getMatchStatus(match) === '進行中',
-                        'bg-[#001f54]': getMatchStatus(match) === '已結束',
-                        'bg-gray-200': getMatchStatus(match) === '未開賽'
-                    }"></div>
+            <div class="flex overflow-x-auto gap-2 mb-6 no-scrollbar pb-2">
+                <button v-for="cat in categories" @click="changeTab(cat)"
+                    :class="activeTab === cat ? 'bg-[#001f54] text-white shadow-lg' : 'bg-white text-gray-500 shadow-sm'"
+                    class="flex-none px-6 py-3 rounded-xl border border-gray-200 text-[11px] font-black transition-all whitespace-nowrap">
+                    {{ cat }}
+                </button>
+            </div>
+
+            <div v-if="availableStages.length > 1" class="flex flex-wrap justify-center gap-2 mb-8">
+                <button v-for="s in availableStages" @click="stage = s" 
+                    :class="stage === s ? 'bg-yellow-400 text-blue-900 shadow-md scale-105' : 'bg-white text-gray-400 border border-gray-200'" 
+                    class="px-4 py-1.5 rounded-full text-[11px] font-black transition-all">
+                    {{ s }}
+                </button>
+            </div>
+            
+            <div v-if="!loading && filteredMatches.length > 0">
+                <div v-for="match in filteredMatches" :key="match.id" class="bg-white rounded-[2rem] mb-5 shadow-sm overflow-hidden border border-white relative">
+                    <div class="h-1.5 w-full" :class="statusColor(match)"></div>
                     
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-5">
-                            <span class="bg-gray-800 text-white text-[10px] px-3 py-1 rounded-md font-bold shadow-sm">🕒 {{ match.Time }}</span>
-                            <div class="flex items-center text-xs font-black" :class="{
-                                'text-red-500': getMatchStatus(match) === '進行中',
-                                'text-[#001f54]': getMatchStatus(match) === '已結束',
-                                'text-gray-400': getMatchStatus(match) === '未開賽'
-                            }">
+                            <div class="flex flex-col gap-1">
+                                <span class="bg-gray-800 text-white text-[9px] px-3 py-1 rounded-md font-bold shadow-sm w-fit uppercase tracking-tighter">🕒 {{ match.Time }}</span>
+                                <span class="bg-blue-50 text-blue-700 text-[9px] px-3 py-1 rounded-md font-black border border-blue-100 w-fit leading-none">📍 {{ match.Venue }}</span>
+                            </div>
+                            
+                            <div class="flex items-center text-[10px] font-black" :class="statusTextColor(match)">
                                 <span v-if="getMatchStatus(match) === '進行中'" class="relative flex h-2 w-2 mr-2">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -56,26 +54,26 @@
                         </div>
 
                         <div class="flex justify-between items-center text-center">
-                            <div class="flex-1 flex flex-col items-center">
+                            <div class="flex-1 flex flex-col items-center px-1">
                                 <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'home')" class="text-xl h-6 mb-1">👑</div>
                                 <div v-else class="h-6 mb-1"></div>
-                                <div class="font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Home }}</div>
+                                <div class="font-bold text-[14px] text-gray-800 leading-tight">{{ match.Home }}</div>
                             </div>
 
-                            <div class="flex-none px-4 text-center">
+                            <div class="flex-none px-2 text-center">
                                 <div class="text-4xl font-black text-gray-900 tabular-nums tracking-tighter">{{ displayScore(match.Score) }}</div>
-                                <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">{{ activeTab }}</div>
+                                <div class="text-[9px] text-gray-400 font-bold mt-1 uppercase tracking-widest">{{ stage }}</div>
                             </div>
 
-                            <div class="flex-1 flex flex-col items-center">
+                            <div class="flex-1 flex flex-col items-center px-1">
                                 <div v-if="getMatchStatus(match) === '已結束' && isWinner(match, 'away')" class="text-xl h-6 mb-1">👑</div>
                                 <div v-else class="h-6 mb-1"></div>
-                                <div class="font-bold text-[14px] text-gray-800 break-words leading-tight">{{ match.Away }}</div>
+                                <div class="font-bold text-[14px] text-gray-800 leading-tight">{{ match.Away }}</div>
                             </div>
                         </div>
 
                         <div v-if="match.Score && match.Score.trim() !== ''" class="mt-5 flex flex-wrap justify-center gap-1.5 w-full">
-                            <span v-for="(s, i) in splitScores(match.Score)" class="bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-100">
+                            <span v-for="(s, i) in splitScores(match.Score)" class="bg-gray-50 text-gray-400 text-[9px] font-bold px-2 py-1 rounded-md border border-gray-100">
                                 {{ s }}
                             </span>
                         </div>
@@ -84,40 +82,8 @@
             </div>
             
             <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">SYNCING...</div>
-            <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無賽程</div>
+            <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無 {{ stage }} 賽程</div>
         </div>
-
-        <footer class="mt-12 px-5 pb-10 text-center">
-            <div class="h-px bg-gray-200 w-full mb-8"></div>
-            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] mb-6">Sponsored By</p>
-            
-            <div class="flex justify-center items-center gap-8 mb-8">
-                <div class="w-32 flex items-center justify-center">
-                    <img src="sp2.png?v=color" class="w-full h-auto object-contain transition-all" alt="Sponsor 1">
-                </div>
-                <div class="w-32 flex items-center justify-center">
-                    <img src="sp3.png?v=color" class="w-full h-auto object-contain transition-all" alt="Sponsor 2">
-                </div>
-            </div>
-
-            <div class="flex justify-center items-center gap-6 mb-8">
-                <div class="w-16 h-16 flex items-center justify-center">
-                    <img src="sp1.png?v=color" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 3">
-                </div>
-                <div class="w-16 h-16 flex items-center justify-center">
-                    <img src="sp4.png?v=color" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 4">
-                </div>
-                <div class="w-16 h-16 flex items-center justify-center">
-                    <img src="sp5.png?v=color" class="max-w-full max-h-full object-contain transition-all" alt="Sponsor 5">
-                </div>
-            </div>
-
-            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">2026 Chemistry Cup in NYCU</p>
-            
-            <div id="busuanzi_container_site_pv" class="text-[9px] text-gray-400 font-bold mt-4 opacity-60">
-                點閱人數：<span id="busuanzi_value_site_pv">--</span> 次
-            </div>
-        </footer>
     </div>
 
     <script>
@@ -129,12 +95,24 @@
                 return {
                     matches: [],
                     activeTab: '男籃',
+                    stage: '預賽', 
                     loading: false,
                     categories: ['男籃', '女籃', '男排', '女排', '羽球團體', '男子單打', '男子雙打', '女子單打'],
                     gidMap: {
                         '男籃': '0', '女籃': '1525132450', '男排': '1646878380', '女排': '1843573624', 
                         '羽球團體': '756676645', '男子單打': '124041338', '男子雙打': '977181851', '女子單打': '837944817'
                     }
+                }
+            },
+            computed: {
+                // 自動提取目前資料中所有的階段 (例如：預賽、8強、決賽)
+                availableStages() {
+                    const stages = [...new Set(this.matches.map(m => m.Stage))];
+                    // 簡單排序：預賽排最前面
+                    return stages.sort((a, b) => a === '預賽' ? -1 : 1);
+                },
+                filteredMatches() {
+                    return this.matches.filter(m => m.Stage === this.stage);
                 }
             },
             methods: {
@@ -151,22 +129,25 @@
                     const matchTime = new Date(); matchTime.setHours(h, m, 0);
                     return now >= matchTime ? '進行中' : '未開賽';
                 },
+                statusColor(match) {
+                    const status = this.getMatchStatus(match);
+                    return { 'bg-red-500': status === '進行中', 'bg-[#001f54]': status === '已結束', 'bg-gray-200': status === '未開賽' };
+                },
+                statusTextColor(match) {
+                    const status = this.getMatchStatus(match);
+                    return { 'text-red-500': status === '進行中', 'text-[#001f54]': status === '已結束', 'text-gray-400': status === '未開賽' };
+                },
                 isWinner(match, side) {
                     const gs = this.splitScores(match.Score);
                     if (gs.length === 0) return false;
                     let hVal = 0, aVal = 0;
-                    if (this.activeTab.includes('籃')) {
-                        gs.forEach(g => {
-                            const p = g.split(':').map(n => parseInt(n));
-                            if (p.length === 2) { hVal += p[0]; aVal += p[1]; }
-                        });
-                    } else {
-                        gs.forEach(g => {
-                            const p = g.split(':').map(n => parseInt(n));
-                            if (p.length === 2) { if (p[0] > p[1]) hVal++; else if (p[1] > p[0]) aVal++; }
-                        });
-                    }
-                    if (hVal === aVal) return false;
+                    gs.forEach(g => {
+                        const p = g.split(':').map(n => parseInt(n));
+                        if (p.length === 2) {
+                            if (this.activeTab.includes('籃')) { hVal += p[0]; aVal += p[1]; }
+                            else { if (p[0] > p[1]) hVal++; else if (p[1] > p[0]) aVal++; }
+                        }
+                    });
                     return side === 'home' ? hVal > aVal : aVal > hVal;
                 },
                 displayScore(s) {
@@ -192,8 +173,20 @@
                         const rows = text.split(/\r?\n/).filter(l => l.trim()).slice(1);
                         this.matches = rows.map((r, i) => {
                             const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
-                            return { id: i, Time: c[0] || '08:00', Home: c[2] || 'TBD', Away: c[3] || 'TBD', Score: c[4] || '' };
+                            return { 
+                                id: i, 
+                                Time: c[0] || '08:00', 
+                                Venue: c[1] || '待定', 
+                                Home: c[2] || 'TBD', 
+                                Away: c[3] || 'TBD', 
+                                Score: c[4] || '',
+                                Stage: c[5] || '預賽' // 抓取第 6 欄
+                            };
                         });
+                        // 重新抓完資料後，如果目前的 stage 不在清單中，預設選第一個
+                        if (!this.availableStages.includes(this.stage)) {
+                            this.stage = this.availableStages[0] || '預賽';
+                        }
                     } catch (e) { this.matches = []; }
                     finally { this.loading = false; }
                 }
@@ -201,5 +194,6 @@
             mounted() { this.getData(); setInterval(this.getData, 30000); }
         }).mount('#app');
     </script>
+    <style> .no-scrollbar::-webkit-scrollbar { display: none; } </style>
 </body>
 </html>
