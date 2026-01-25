@@ -55,103 +55,112 @@
     </div>
 
     <script>
-        const { createApp } = Vue;
-        createApp({
-            data() {
-                return {
-                    selectedCategory: '男籃',
-                    groups: [],
-                    categoryData: {
-                        '男籃': { num4: 3, num3: 3, teams: ["中山醫化", "東海化學", "臺師範化學", "淡江化材", "嘉大應化", "成大化學A", "成大化學B", "淡江化學", "南大綠能", "中興化學", "高醫醫化A", "高醫醫化B", "台大化學", "清大化學", "中正化生", "中原化學", "交大應化A", "交大應化B", "東吳化學", "輔仁化學A", "輔仁化學B"]},
-                        '男排': { num4: 1, num3: 8, teams: ["暨大應化", "彰師範化學", "東海化材聯隊", "臺師範化學", "中山醫化", "淡江化學", "東華化材聯隊", "台大農生聯隊A", "台大農生聯隊B", "中興化學A", "中興化學B", "成大化學A", "成大化學B", "中央化學", "高師大化學", "高醫醫化", "台大化學", "中正化生", "長庚化材", "淡江化材", "中原化學A", "中原化學B", "輔仁化學", "清大化學A", "清大化學B", "清大化學C", "交大應化A", "交大應化B"]},
-                        '女排': { num4: 0, num3: 6, teams: ["中山化學", "臺師範化學", "中原化學", "彰師範化學", "台大農生聯隊", "中山醫化", "東海化學", "台大化學", "淡江化學", "中興化學", "成大化學", "高醫醫化", "輔仁化學", "清大化學", "中正化生", "淡江化材", "交大應化A", "交大應化B"]},
-                        '羽球團體': { num4: 2, num3: 5, teams: ["中央化學A", "中央化學B", "臺師範化學", "中山醫化", "中興化學", "成大化學", "彰師範化學", "高醫醫化", "暨南應化A", "暨南應化B", "輔仁化學", "中正化生A", "中正化生B", "台大化學A", "台大化學B", "清大化學A", "清大化學B", "清大化學C", "中原化學", "交大應化A", "交大應化B", "交大應化C", "交大應化V"]},
-                        '男子單打': { num4: 0, num3: 18, teams: ["臺師範化學張皓鈞", "台大化學傅琮祐", "屏東化學林均翰", "台大化學吳星毅", "中央化學專李凡邑", "台大化學黃士晏", "成大化學黃聖明", "台大化學張睿宸", "成大化學李秉澍", "台大化學趙家樂", "中興化學張立昕", "台大化學游閔瀚", "中興化學黃竑維", "台大化學姜伯叡", "中興化學劉家齊", "台大化學江檀", "中興化學曹祐瑋", "台大化學周首安", "成大化學胡宇創", "台大化學李沛澤", "彰師範化學游奇", "台大化學陳陞", "高醫醫化魏睿騰", "台大化學許奕恩", "高醫醫化潘柏勳", "清大化學曾成鳳", "高醫醫化黃聖凱", "清大化學黃啟瑋", "高醫醫化林敬庭", "中原化學陳華文", "高醫醫化鍾易錡", "中原化學程泰霖", "暨南應化吳承軒", "中原化學陳俊憲", "暨南應化劉竑志", "中興化學王梓祥", "暨南應化彭立宸", "交大應化李恒安", "暨南應化黃健富", "交大應化葉力綸", "輔仁化學莊振揚", "交大應化周敬軒", "輔仁化學張少謙", "交大應化劉崴倫", "輔仁化學林宥辰", "交大應化吳炫廷", "輔仁化學黃冠霖", "交大應化連宸緯", "輔仁化學楊帙翔", "交大應化謝昀廷", "中正化生謝欣宏", "靜宜應化劉宇翔", "中正化生潘昱睿", "中興化學林康立"]},
-                        '男子雙打': { num4: 0, num3: 12, teams: ["臺師範化學蔡宇軒/楊雲亘", "台大化學吳星毅/林育丞", "屏東化學林均翰/林祐琛", "台大化學林諺輝/楊子毅", "中央化學李凡邑/蔡宜叡", "台大化學張睿宸/趙家樂", "中央化學宋承憲/顏嘉佑", "交大應化李恒安/張勻敬", "中山醫化吳鴻敏/袁驊", "交大應化周敬軒/林昀陞", "臺師範化學李浚祐/黃瑞宸", "交大應化李宥頡/郭士愷", "中興化學張立昕/陳論揚", "靜宜應化林晉弘/劉宇翔", "中興化學涂育丞/陳柏宇", "交大應化黃承勛/林秉儒", "成大化學洪宇宸/劉凱汶", "高醫醫化魏睿騰/李彥儒", "高醫醫化謝政哲/王證棋", "高醫醫化黃聖凱/鍾易錡", "高醫醫化王晨旭/柯品丞", "暨南應化余韋霖/李建岑", "暨南應化吳承軒/趙昱鈞", "暨南應化黃煜宸/羅楷程", "輔大化學陳宥丞/張紘恩", "輔大化學黃冠霖/莊振揚", "輔大化學游昕倫/黃政翔", "輔大化學楊帙翔/游智勛", "中正化生魏昱凱/陳紀豐", "中正化生陳昱亘/游能耀", "中正化生孫郁傑/詹志煒", "中正化生張育瑋/謝宗諺", "清大化學陳捷一/陳尚逸", "中原化學陳華文/程泰霖", "台大化學傅琮祐/姜伯叡", "台大化學陳陞/陳翌豐"]},
-                        '女子單打': { num4: 1, num3: 2, teams: ["高醫醫化陳偲僑", "暨南應化高靖暄", "暨南應化王家慧", "輔仁化學蘇力妍", "輔仁化學邱筠婷", "中正化生謝宛諭", "交大應化楊昀容", "交大應化黃筱渝", "交大應化唐杺妤", "交大應化陳筠珊"]}
-                    }
-                }
-            },
-            computed: {
-                currentTeams() { return this.categoryData[this.selectedCategory].teams; }
-            },
-            methods: {
-                resetDraw() { this.groups = []; },
-                startSmartDraw() {
-                    const teams = [...this.currentTeams];
-                    const schoolGroups = {};
-                    
-                    teams.forEach(t => {
-                        let k = t;
-                        if (!t.includes("聯隊")) {
-                            const schools = ["中山醫", "中山", "台大", "清大", "中興", "交大", "成大", "中原", "淡江", "高醫", "輔仁", "中央", "暨南", "中正"];
-                            for(let s of schools) { if(t.includes(s)) { k = s; break; } }
-                            if(k === t) k = t.substring(0, 2);
-                        }
-                        if (!schoolGroups[k]) schoolGroups[k] = [];
-                        schoolGroups[k].push(t);
-                    });
-
-                    let sortedSchoolKeys = Object.keys(schoolGroups).sort((a, b) => schoolGroups[b].length - schoolGroups[a].length);
-                    const config = this.categoryData[this.selectedCategory];
-                    const totalGroups = config.num4 + config.num3;
-                    let finalGroups = Array.from({length: totalGroups}, () => []);
-
-                    sortedSchoolKeys.forEach(schoolKey => {
-                        let schoolTeams = [...schoolGroups[schoolKey]].sort(() => Math.random() - 0.5);
-                        schoolTeams.forEach(team => {
-                            let candidates = finalGroups.map((g, idx) => ({ idx, length: g.length, teams: g }))
-                                .filter(g => {
-                                    const limit = g.idx < config.num4 ? 4 : 3;
-                                    const noSameSchool = !g.teams.some(existingTeam => existingTeam.includes(schoolKey));
-                                    return g.length < limit && noSameSchool;
-                                });
-
-                            if (candidates.length > 0) {
-                                const target = candidates[Math.floor(Math.random() * candidates.length)];
-                                finalGroups[target.idx].push(team);
-                            } else {
-                                let mostEmpty = finalGroups.map((g, idx) => ({ idx, length: g.length }))
-                                    .filter(g => g.length < (g.idx < config.num4 ? 4 : 3))
-                                    .sort((a, b) => a.length - b.length)[0];
-                                if(mostEmpty) finalGroups[mostEmpty.idx].push(team);
-                            }
-                        });
-                    });
-
-                    this.groups = finalGroups.map((g, i) => ({
-                        name: String.fromCharCode(65 + i) + '組',
-                        teams: g.sort(() => Math.random() - 0.5)
-                    }));
+    const { createApp } = Vue;
+    createApp({
+        data() {
+            return {
+                selectedCategory: '男籃',
+                groups: [],
+                // 種子隊名單定義
+                seeds: {
+                    '男排': ["中正化生", "清大化學A", "台大化學", "成大化學A"],
+                    '女排': ["中興化學", "中山化學", "中正化生", "高醫醫化"]
                 },
-                downloadCSV() {
-                    let csvContent = "\uFEFF"; 
-                    csvContent += "項目,組別,序號,隊伍/選手名稱\n";
-                    
-                    this.groups.forEach(group => {
-                        group.teams.forEach((team, index) => {
-                            const row = [
-                                this.selectedCategory,
-                                group.name,
-                                group.name.charAt(0) + (index + 1),
-                                `"${team}"` // 加引號防止內容有逗號導致跑格
-                            ].join(",");
-                            csvContent += row + "\n";
-                        });
-                    });
-
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.setAttribute("href", url);
-                    link.setAttribute("download", `${this.selectedCategory}_抽籤結果.csv`);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                categoryData: {
+                    '男籃': { num4: 3, num3: 3, teams: ["中山醫化", "東海化學", "臺師範化學", "淡江化材", "嘉大應化", "成大化學A", "成大化學B", "淡江化學", "南大綠能", "中興化學", "高醫醫化A", "高醫醫化B", "台大化學", "清大化學", "中正化生", "中原化學", "交大應化A", "交大應化B", "東吳化學", "輔仁化學A", "輔仁化學B"]},
+                    '男排': { num4: 1, num3: 8, teams: ["暨大應化", "彰師範化學", "東海化材聯隊", "臺師範化學", "中山醫化", "淡江化學", "東華化材聯隊", "台大農生聯隊A", "台大農生聯隊B", "中興化學A", "中興化學B", "成大化學A", "成大化學B", "中央化學", "高師大化學", "高醫醫化", "台大化學", "中正化生", "長庚化材", "淡江化材", "中原化學A", "中原化學B", "輔仁化學", "清大化學A", "清大化學B", "清大化學C", "交大應化A", "交大應化B"]},
+                    '女排': { num4: 0, num3: 6, teams: ["中山化學", "臺師範化學", "中原化學", "彰師範化學", "台大農生聯隊", "中山醫化", "東海化學", "台大化學", "淡江化學", "中興化學", "成大化學", "高醫醫化", "輔仁化學", "清大化學", "中正化生", "淡江化材", "交大應化A", "交大應化B"]},
+                    '羽球團體': { num4: 2, num3: 5, teams: ["中央化學A", "中央化學B", "臺師範化學", "中山醫化", "中興化學", "成大化學", "彰師範化學", "高醫醫化", "暨南應化A", "暨南應化B", "輔仁化學", "中正化生A", "中正化生B", "台大化學A", "台大化學B", "清大化學A", "清大化學B", "清大化學C", "中原化學", "交大應化A", "交大應化B", "交大應化C", "交大應化V"]},
+                    '男子單打': { num4: 0, num3: 18, teams: ["臺師範化學張皓鈞", "台大化學傅琮祐", "屏東化學林均翰", "台大化學吳星毅", "中央化學李凡邑", "台大化學黃士晏", "成大化學黃聖明", "台大化學張睿宸", "成大化學李秉澍", "台大化學趙家樂", "中興化學張立昕", "台大化學游閔瀚", "中興化學黃竑維", "台大化學姜伯叡", "中興化學劉家齊", "台大化學江檀", "中興化學曹祐瑋", "台大化學周首安", "成大化學胡宇創", "台大化學李沛澤", "彰師範化學游奇", "台大化學陳陞", "高醫醫化魏睿騰", "台大化學許奕恩", "高醫醫化潘柏勳", "清大化學曾成鳳", "高醫醫化黃聖凱", "清大化學黃啟瑋", "高醫醫化林敬庭", "中原化學陳華文", "高醫醫化鍾易錡", "中原化學程泰霖", "暨南應化吳承軒", "中原化學陳俊憲", "暨南應化劉竑志", "中興化學王梓祥", "暨南應化彭立宸", "交大應化李恒安", "暨南應化黃健富", "交大應化葉力綸", "輔仁化學莊振揚", "交大應化周敬軒", "輔仁化學張少謙", "交大應化劉崴倫", "輔仁化學林宥辰", "交大應化吳炫廷", "輔仁化學黃冠霖", "交大應化連宸緯", "輔仁化學楊帙翔", "交大應化謝昀廷", "中正化生謝欣宏", "靜宜應化劉宇翔", "中正化生潘昱睿", "中興化學林康立"]},
+                    '男子雙打': { num4: 0, num3: 12, teams: ["臺師範化學蔡宇軒/楊雲亘", "台大化學吳星毅/林育丞", "屏東化學林均翰/林祐琛", "台大化學林諺輝/楊子毅", "中央化學李凡邑/蔡宜叡", "台大化學張睿宸/趙家樂", "中央化學宋承憲/顏嘉佑", "交大應化李恒安/張勻敬", "中山醫化吳鴻敏/袁驊", "交大應化周敬軒/林昀陞", "臺師範化學李浚祐/黃瑞宸", "交大應化李宥頡/郭士愷", "中興化學張立昕/陳論揚", "靜宜應化林晉弘/劉宇翔", "中興化學涂育丞/陳柏宇", "交大應化黃承勛/林秉儒", "成大化學洪宇宸/劉凱汶", "高醫醫化魏睿騰/李彥儒", "高醫醫化謝政哲/王證棋", "高醫醫化黃聖凱/鍾易錡", "高醫醫化王晨旭/柯品丞", "暨南應化余韋霖/李建岑", "暨南應化吳承軒/趙昱鈞", "暨南應化黃煜宸/羅楷程", "輔大化學陳宥丞/張紘恩", "輔大化學黃冠霖/莊振揚", "輔大化學游昕倫/黃政翔", "輔大化學楊帙翔/游智勛", "中正化生魏昱凱/陳紀豐", "中正化生陳昱亘/游能耀", "中正化生孫郁傑/詹志煒", "中正化生張育瑋/謝宗諺", "清大化學陳捷一/陳尚逸", "中原化學陳華文/程泰霖", "台大化學傅琮祐/姜伯叡", "台大化學陳陞/陳翌豐"]},
+                    '女子單打': { num4: 1, num3: 2, teams: ["高醫醫化陳偲僑", "暨南應化高靖暄", "暨南應化王家慧", "輔仁化學蘇力妍", "輔仁化學邱筠婷", "中正化生謝宛諭", "交大應化楊昀容", "交大應化黃筱渝", "交大應化唐杺妤", "交大應化陳筠珊"]}
                 }
             }
-        }).mount('#draw-app');
-    </script>
-</body>
-</html>
+        },
+        computed: {
+            currentTeams() { return this.categoryData[this.selectedCategory].teams; }
+        },
+        methods: {
+            resetDraw() { this.groups = []; },
+            startSmartDraw() {
+                const teams = [...this.currentTeams];
+                const config = this.categoryData[this.selectedCategory];
+                const totalGroups = config.num4 + config.num3;
+                let finalGroups = Array.from({length: totalGroups}, () => []);
+
+                // 1. 識別種子隊並從名單中暫時移除
+                let currentSeeds = this.seeds[this.selectedCategory] || [];
+                let seedTeams = [];
+                let remainingTeams = [];
+
+                teams.forEach(t => {
+                    if (currentSeeds.includes(t)) seedTeams.push(t);
+                    else remainingTeams.push(t);
+                });
+
+                // 2. 先分配種子隊 (一人一組，隨機佔坑)
+                seedTeams.sort(() => Math.random() - 0.5).forEach((seed, idx) => {
+                    if (finalGroups[idx]) finalGroups[idx].push(seed);
+                });
+
+                // 3. 校名判定 (取前三字) 與 大戶排序
+                const schoolGroups = {};
+                remainingTeams.forEach(t => {
+                    const k = t.substring(0, 3); // 規則：偵測前三個字
+                    if (!schoolGroups[k]) schoolGroups[k] = [];
+                    schoolGroups[k].push(t);
+                });
+
+                let sortedKeys = Object.keys(schoolGroups).sort((a, b) => schoolGroups[b].length - schoolGroups[a].length);
+
+                // 4. 分配剩餘隊伍
+                sortedKeys.forEach(schoolKey => {
+                    let schoolTeams = [...schoolGroups[schoolKey]].sort(() => Math.random() - 0.5);
+                    schoolTeams.forEach(team => {
+                        let candidates = finalGroups.map((g, idx) => ({ idx, length: g.length, teams: g }))
+                            .filter(g => {
+                                const limit = g.idx < config.num4 ? 4 : 3;
+                                // 檢查該組是否已有同前三字的校隊
+                                const noSameSchool = !g.teams.some(existing => existing.substring(0, 3) === schoolKey);
+                                return g.length < limit && noSameSchool;
+                            });
+
+                        if (candidates.length > 0) {
+                            const target = candidates[Math.floor(Math.random() * candidates.length)];
+                            finalGroups[target.idx].push(team);
+                        } else {
+                            // 萬一迴避失敗，塞入最空那一組
+                            let mostEmpty = finalGroups.map((g, idx) => ({ idx, length: g.length }))
+                                .filter(g => g.length < (g.idx < config.num4 ? 4 : 3))
+                                .sort((a, b) => a.length - b.length)[0];
+                            if(mostEmpty) finalGroups[mostEmpty.idx].push(team);
+                        }
+                    });
+                });
+
+                // 5. 渲染
+                this.groups = finalGroups.map((g, i) => ({
+                    name: String.fromCharCode(65 + i) + '組',
+                    teams: g.sort(() => Math.random() - 0.5)
+                }));
+            },
+            downloadCSV() {
+                let csvContent = "\uFEFF"; 
+                csvContent += "項目,組別,序號,隊伍/選手名稱\n";
+                this.groups.forEach(group => {
+                    group.teams.forEach((team, index) => {
+                        csvContent += `${this.selectedCategory},${group.name},${group.name.charAt(0)}${index + 1},"${team}"\n`;
+                    });
+                });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${this.selectedCategory}_抽籤結果.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    }).mount('#draw-app');
+</script>
