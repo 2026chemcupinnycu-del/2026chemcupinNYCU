@@ -82,7 +82,7 @@
             currentTeams() { return this.categoryData[this.selectedCategory].teams; },
             isVolleyball() { return this.selectedCategory === '男排' || this.selectedCategory === '女排'; },
             displayRule() {
-                return this.isVolleyball ? "同校系迴避 (前三字) ＋ 去年冠亞季殿分開" : "同校系迴避 (前三字)";
+                return this.isVolleyball ? "同校系迴避 ＋ 去年冠亞季殿分開" : "同校系迴避";
             }
         },
         methods: {
