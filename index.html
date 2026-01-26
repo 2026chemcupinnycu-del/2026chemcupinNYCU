@@ -6,6 +6,7 @@
     <title>2026 大化盃比分牆</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </head>
 <body class="bg-gray-100">
     <div id="app" class="max-w-md mx-auto min-h-screen pb-10">
@@ -84,6 +85,41 @@
             <div v-else-if="loading" class="text-center py-20 text-gray-400 font-bold italic tracking-widest">SYNCING...</div>
             <div v-else class="text-center py-20 text-gray-400 font-bold bg-white/50 rounded-[2rem] border-2 border-dashed border-gray-300">目前暫無 {{ stage }} 賽程</div>
         </div>
+
+        <footer class="mt-12 px-5 pb-10 text-center">
+            <div class="h-px bg-gray-200 w-full mb-8"></div>
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] mb-8">Sponsored By</p>
+            
+            <div class="mb-6 w-full">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <img src="sp1.png?v=color" class="w-full h-auto max-h-24 object-contain mx-auto" alt="Major Sponsor 1">
+                </div>
+            </div>
+        
+            <div class="mb-8 w-full">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <img src="sp2.png?v=color" class="w-full h-auto max-h-20 object-contain mx-auto" alt="Major Sponsor 2">
+                </div>
+            </div>
+        
+            <div class="grid grid-cols-3 gap-4 mb-10">
+                <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-center aspect-square">
+                    <img src="sp3.png" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-center aspect-square">
+                    <img src="sp4.png" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-center aspect-square">
+                    <img src="sp5.png" class="max-w-full max-h-full object-contain">
+                </div>
+            </div>
+        
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em]">2026 Chemistry Cup in NYCU</p>
+            
+            <div id="busuanzi_container_site_pv" class="text-[9px] text-gray-400 font-bold mt-4 opacity-60">
+                點閱人數：<span id="busuanzi_value_site_pv">--</span> 次
+            </div>
+        </footer>
     </div>
 
     <script>
@@ -105,10 +141,8 @@
                 }
             },
             computed: {
-                // 自動提取目前資料中所有的階段 (例如：預賽、8強、決賽)
                 availableStages() {
                     const stages = [...new Set(this.matches.map(m => m.Stage))];
-                    // 簡單排序：預賽排最前面
                     return stages.sort((a, b) => a === '預賽' ? -1 : 1);
                 },
                 filteredMatches() {
@@ -180,10 +214,9 @@
                                 Home: c[2] || 'TBD', 
                                 Away: c[3] || 'TBD', 
                                 Score: c[4] || '',
-                                Stage: c[5] || '預賽' // 抓取第 6 欄
+                                Stage: c[5] || '預賽'
                             };
                         });
-                        // 重新抓完資料後，如果目前的 stage 不在清單中，預設選第一個
                         if (!this.availableStages.includes(this.stage)) {
                             this.stage = this.availableStages[0] || '預賽';
                         }
