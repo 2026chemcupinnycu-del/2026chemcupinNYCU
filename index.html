@@ -160,38 +160,45 @@
                     
                     const now = new Date();
                     const rawTime = match.Time || "";
+                    if (!rawTime) return '未開賽';
                     
                     try {
                         let matchTime;
-                        // 處理 2026/3/15 上午 8:30:00 格式
-                        if (rawTime.includes('上午') || rawTime.includes('下午')) {
-                            const parts = rawTime.split(' ');
-                            const datePart = parts[0]; // 2026/3/15
-                            const ampm = parts[1];    // 上午/下午
-                            const timePart = parts[2]; // 8:30:00
+                        // 針對 "2026/3/15 上午 8:30:00" 進行手動暴力拆解
+                        const parts = rawTime.split(/\s+/); 
+                        if (parts.length >= 3) {
+                            const dateParts = parts[0].split('/'); // [2026, 3, 15]
+                            const ampm = parts[1]; // 上午 或 下午
+                            const timeParts = parts[2].split(':'); // [8, 30, 00]
                             
-                            let [h, m] = timePart.split(':').map(n => parseInt(n));
-                            if (ampm === '下午' && h < 12) h += 12;
-                            if (ampm === '上午' && h === 12) h = 0;
+                            let h = parseInt(timeParts[0]);
+                            let m = parseInt(timeParts[1]);
                             
-                            matchTime = new Date(`${datePart} ${h}:${m}:00`);
+                            // 24小時制手動轉換
+                            if (ampm.includes('下午') && h < 12) h += 12;
+                            if (ampm.includes('上午') && h === 12) h = 0;
+                            
+                            // 使用本地時間建構 (年, 月-1, 日, 時, 分)
+                            matchTime = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], h, m);
                         } else {
-                            // 萬一格式跑掉的備案
-                            const [h, m] = rawTime.split(':').map(n => parseInt(n));
+                            // 備案：如果只有 "08:30"
+                            const tParts = rawTime.split(':');
+                            const h = parseInt(tParts[0]);
+                            const m = parseInt(tParts[1]);
                             matchTime = new Date();
                             matchTime.setHours(h || 8, m || 0, 0);
                         }
 
-                        // 如果解析出來是無效時間，預設未開賽
                         if (isNaN(matchTime.getTime())) return '未開賽';
 
-                        // 判斷邏輯：開始時間 90 分鐘內為進行中
+                        // 判定邏輯：開始時間 100 分鐘內為進行中 (妳原本設定 100)
                         const endTime = new Date(matchTime.getTime() + 100 * 60000);
                         
                         if (now < matchTime) return '未開賽';
                         if (now >= matchTime && now <= endTime) return '進行中';
                         return '已結束';
                     } catch (e) {
+                        console.error("時間解析出錯:", e);
                         return '未開賽';
                     }
                 },
