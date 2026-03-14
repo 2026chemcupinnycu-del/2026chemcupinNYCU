@@ -152,6 +152,7 @@
                 },
                 getMatchStatus(match) {
                     const scores = this.splitScores(match.Score);
+                    // 只要有分數，一律判定為已結束
                     if (scores.length > 0) return '已結束';
                     
                     const now = new Date();
@@ -160,31 +161,41 @@
                     
                     try {
                         let matchTime;
-                        const matchParts = rawTime.match(/(\d+\/\d+\/\d+)\s+(上午|下午)\s+(\d+):(\d+)/);
                         
-                        if (matchParts) {
-                            const dateStr = matchParts[1];
-                            const ampm = matchParts[2];
-                            let h = parseInt(matchParts[3]);
-                            let m = parseInt(matchParts[4]);
+                        // 檢查是否有「上午/下午」字眼
+                        const hasAMPM = rawTime.includes('上午') || rawTime.includes('下午');
+
+                        if (hasAMPM) {
+                            // 處理：2026/3/14 下午 9:10:00
+                            const parts = rawTime.split(/\s+/);
+                            const d = parts[0].split('/');
+                            const ampm = parts[1];
+                            const t = parts[2].split(':');
+                            let h = parseInt(t[0]);
+                            let m = parseInt(t[1]);
                             
-                            if (ampm === '下午' && h < 12) h += 12;
-                            if (ampm === '上午' && h === 12) h = 0;
-                            
-                            const d = dateStr.split('/');
+                            if (ampm.includes('下午') && h < 12) h += 12;
+                            if (ampm.includes('上午') && h === 12) h = 0;
                             matchTime = new Date(d[0], d[1] - 1, d[2], h, m);
                         } else {
+                            // 處理：2026/03/14 21:10:00 (Excel 自動轉成的格式)
+                            // 或是單純 2026-03-14 21:10
+                            const cleanTime = rawTime.replace(/-/g, '/'); // 統一斜線
+                            matchTime = new Date(cleanTime);
+                        }
+
+                        // 如果 Date 還是解析失敗 (Invalid Date)
+                        if (isNaN(matchTime.getTime())) {
+                            console.error("無法解析時間:", rawTime);
                             return '未開賽';
                         }
 
-                        if (isNaN(matchTime.getTime())) return '未開賽';
-
-                        const duration = 100 * 60000; 
+                        const duration = 100 * 60000; // 100 分鐘判定
                         const diff = now - matchTime;
 
-                        if (diff < 0) return '未開賽';
-                        if (diff <= duration) return '進行中';
-                        return '已結束';
+                        if (diff < 0) return '未開賽'; // 時間還沒到
+                        if (diff <= duration) return '進行中'; // 正在進行
+                        return '已結束'; // 超過 100 分鐘
                     } catch (e) {
                         return '未開賽';
                     }
