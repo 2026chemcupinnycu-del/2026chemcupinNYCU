@@ -159,69 +159,40 @@
                     if (scores.length > 0) return '已結束';
                     
                     const now = new Date();
-                    const rawTime = match.Time || "";
+                    const rawTime = (match.Time || "").trim();
                     if (!rawTime) return '未開賽';
                     
                     try {
                         let matchTime;
-                        // 針對 "2026/3/15 上午 8:30:00" 進行手動暴力拆解
-                        const parts = rawTime.split(/\s+/); 
-                        if (parts.length >= 3) {
-                            const dateParts = parts[0].split('/'); // [2026, 3, 15]
-                            const ampm = parts[1]; // 上午 或 下午
-                            const timeParts = parts[2].split(':'); // [8, 30, 00]
+                        // 修正：更強大的正規表達式來拆解 "2026/3/14 下午 9:20:00"
+                        const matchParts = rawTime.match(/(\d+\/\d+\/\d+)\s+(上午|下午)\s+(\d+):(\d+)/);
+                        
+                        if (matchParts) {
+                            const dateStr = matchParts[1]; // "2026/3/14"
+                            const ampm = matchParts[2];    // "下午"
+                            let h = parseInt(matchParts[3]); // 9
+                            let m = parseInt(matchParts[4]); // 20
                             
-                            let h = parseInt(timeParts[0]);
-                            let m = parseInt(timeParts[1]);
+                            if (ampm === '下午' && h < 12) h += 12;
+                            if (ampm === '上午' && h === 12) h = 0;
                             
-                            // 24小時制手動轉換
-                            if (ampm.includes('下午') && h < 12) h += 12;
-                            if (ampm.includes('上午') && h === 12) h = 0;
-                            
-                            // 使用本地時間建構 (年, 月-1, 日, 時, 分)
-                            matchTime = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], h, m);
+                            const d = dateStr.split('/');
+                            matchTime = new Date(d[0], d[1] - 1, d[2], h, m);
                         } else {
-                            // 備案：如果只有 "08:30"
-                            const tParts = rawTime.split(':');
-                            const h = parseInt(tParts[0]);
-                            const m = parseInt(tParts[1]);
-                            matchTime = new Date();
-                            matchTime.setHours(h || 8, m || 0, 0);
+                            return '未開賽';
                         }
 
                         if (isNaN(matchTime.getTime())) return '未開賽';
 
-                        // 判定邏輯：開始時間 100 分鐘內為進行中 (妳原本設定 100)
-                        const endTime = new Date(matchTime.getTime() + 100 * 60000);
-                        
-                        if (now < matchTime) return '未開賽';
-                        if (now >= matchTime && now <= endTime) return '進行中';
+                        const duration = 100 * 60000; // 100 分鐘
+                        const diff = now - matchTime;
+
+                        if (diff < 0) return '未開賽';
+                        if (diff <= duration) return '進行中';
                         return '已結束';
                     } catch (e) {
-                        console.error("時間解析出錯:", e);
                         return '未開賽';
                     }
-                },
-                statusColor(match) {
-                    const status = this.getMatchStatus(match);
-                    return { 'bg-red-500': status === '進行中', 'bg-[#001f54]': status === '已結束', 'bg-gray-200': status === '未開賽' };
-                },
-                statusTextColor(match) {
-                    const status = this.getMatchStatus(match);
-                    return { 'text-red-500': status === '進行中', 'text-[#001f54]': status === '已結束', 'text-gray-400': status === '未開賽' };
-                },
-                isWinner(match, side) {
-                    const gs = this.splitScores(match.Score);
-                    if (gs.length === 0) return false;
-                    let hVal = 0, aVal = 0;
-                    gs.forEach(g => {
-                        const p = g.split(':').map(n => parseInt(n));
-                        if (p.length === 2) {
-                            if (this.activeTab.includes('籃')) { hVal += p[0]; aVal += p[1]; }
-                            else { if (p[0] > p[1]) hVal++; else if (p[1] > p[0]) aVal++; }
-                        }
-                    });
-                    return side === 'home' ? hVal > aVal : aVal > hVal;
                 },
                 displayScore(s) {
                     const gs = this.splitScores(s);
