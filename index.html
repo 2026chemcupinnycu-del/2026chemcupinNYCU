@@ -153,13 +153,47 @@
                     if (!s) return [];
                     return s.replace(/"/g, '').split(/[ /\s,]+/).filter(x => x.includes(':'));
                 },
+                // 核心修正：處理中文日期時間格式
                 getMatchStatus(match) {
                     const scores = this.splitScores(match.Score);
                     if (scores.length > 0) return '已結束';
+                    
                     const now = new Date();
-                    const [h, m] = (match.Time || "08:00").split(':').map(n => parseInt(n));
-                    const matchTime = new Date(); matchTime.setHours(h, m, 0);
-                    return now >= matchTime ? '進行中' : '未開賽';
+                    const rawTime = match.Time || "";
+                    
+                    try {
+                        let matchTime;
+                        // 處理 2026/3/15 上午 8:30:00 格式
+                        if (rawTime.includes('上午') || rawTime.includes('下午')) {
+                            const parts = rawTime.split(' ');
+                            const datePart = parts[0]; // 2026/3/15
+                            const ampm = parts[1];    // 上午/下午
+                            const timePart = parts[2]; // 8:30:00
+                            
+                            let [h, m] = timePart.split(':').map(n => parseInt(n));
+                            if (ampm === '下午' && h < 12) h += 12;
+                            if (ampm === '上午' && h === 12) h = 0;
+                            
+                            matchTime = new Date(`${datePart} ${h}:${m}:00`);
+                        } else {
+                            // 萬一格式跑掉的備案
+                            const [h, m] = rawTime.split(':').map(n => parseInt(n));
+                            matchTime = new Date();
+                            matchTime.setHours(h || 8, m || 0, 0);
+                        }
+
+                        // 如果解析出來是無效時間，預設未開賽
+                        if (isNaN(matchTime.getTime())) return '未開賽';
+
+                        // 判斷邏輯：開始時間 90 分鐘內為進行中
+                        const endTime = new Date(matchTime.getTime() + 100 * 60000);
+                        
+                        if (now < matchTime) return '未開賽';
+                        if (now >= matchTime && now <= endTime) return '進行中';
+                        return '已結束';
+                    } catch (e) {
+                        return '未開賽';
+                    }
                 },
                 statusColor(match) {
                     const status = this.getMatchStatus(match);
